@@ -1,0 +1,9 @@
+[project]
+name = "hanlian-ai-chat"
+version = "0.1.0"
+description = "AI chat service skeleton for Hanlian workspace"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
