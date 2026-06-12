@@ -1,0 +1,12 @@
+server:
+  port: 18083
+
+spring:
+  application:
+    name: match-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

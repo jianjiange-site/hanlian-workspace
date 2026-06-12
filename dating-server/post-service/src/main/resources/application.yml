@@ -1,0 +1,12 @@
+server:
+  port: 18084
+
+spring:
+  application:
+    name: post-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

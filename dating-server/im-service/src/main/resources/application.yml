@@ -1,0 +1,12 @@
+server:
+  port: 18082
+
+spring:
+  application:
+    name: im-service
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
