@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: user-service
+  datasource:
+    url: jdbc:postgresql://38.76.188.242:5433/dating_dev_hanlian?stringtype=unspecified
+    username: jianjian_test
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      connection-init-sql: SET TIME ZONE 'UTC'
   cloud:
     nacos:
       discovery:
