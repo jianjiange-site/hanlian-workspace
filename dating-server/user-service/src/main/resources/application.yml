@@ -20,6 +20,13 @@ spring:
         namespace: dev-hanlian
         username: nacos
         password: ${NACOS_PASSWORD}
+  data:
+    redis:
+      host: 38.76.188.242
+      port: 6380
+      password: ${REDIS_PASSWORD}
+      database: 1
+      timeout: 3s
 
 management:
   endpoints:
