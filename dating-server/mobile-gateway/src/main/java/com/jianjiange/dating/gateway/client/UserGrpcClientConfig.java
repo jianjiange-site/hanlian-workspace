@@ -3,6 +3,7 @@ package com.jianjiange.dating.gateway.client;
 import com.dating.hanlian.proto.user.v1.UserServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,7 +35,7 @@ public class UserGrpcClientConfig {
      */
     @Bean
     public UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub(
-            ManagedChannel userServiceManagedChannel) {
+            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel) {
         return UserServiceGrpc.newBlockingStub(userServiceManagedChannel);
     }
 }

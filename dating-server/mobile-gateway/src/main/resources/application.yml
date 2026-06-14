@@ -22,3 +22,8 @@ user-service:
   grpc:
     host: 127.0.0.1
     port: 19081
+
+match-service:
+  grpc:
+    host: 127.0.0.1
+    port: 19083
