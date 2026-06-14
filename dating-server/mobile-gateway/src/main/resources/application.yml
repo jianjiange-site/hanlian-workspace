@@ -32,3 +32,8 @@ im-service:
   grpc:
     host: 127.0.0.1
     port: 19082
+
+post-service:
+  grpc:
+    host: 127.0.0.1
+    port: 19084
