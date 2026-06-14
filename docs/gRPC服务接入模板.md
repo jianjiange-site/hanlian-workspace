@@ -8,20 +8,24 @@
 
 ```text
 mobile-gateway -> user-service
+mobile-gateway -> match-service
+mobile-gateway -> im-service
+mobile-gateway -> post-service
+mobile-gateway -> payment-service
 ```
 
-已验证链路：
+已验证链路形态：
 
 ```text
 浏览器 / curl
   -> mobile-gateway HTTP 8080
   -> mobile-gateway gRPC client
-  -> user-service gRPC 19081
-  -> UserService/Ping
+  -> 业务服务 gRPC 1908x
+  -> <Service>/Ping
   -> 返回 pong
 ```
 
-后续接入 `match-service`、`im-service`、`payment-service` 时，优先按这份模板复制。
+后续接入新服务时，优先按这份模板复制。等模式稳定后，再考虑抽公共封装。
 
 ---
 
@@ -317,7 +321,7 @@ public class UserGrpcClientConfig {
 
     @Bean
     public UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub(
-            ManagedChannel userServiceManagedChannel) {
+            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel) {
         return UserServiceGrpc.newBlockingStub(userServiceManagedChannel);
     }
 }
@@ -330,6 +334,35 @@ ManagedChannel 要复用。
 不要每次 HTTP 请求都创建新 channel。
 本地开发用 usePlaintext。
 Bean destroyMethod 用 shutdown。
+stub 参数必须用 @Qualifier 指定具体 channel。
+```
+
+为什么必须用 `@Qualifier`：
+
+```text
+mobile-gateway 当前已经有五个 ManagedChannel。
+它们的 Java 类型都是 io.grpc.ManagedChannel。
+如果只按类型注入，Spring 不知道该选 user、match、im、post 还是 payment。
+```
+
+当前已验证的 channel 命名：
+
+```text
+userServiceManagedChannel
+matchServiceManagedChannel
+imServiceManagedChannel
+postServiceManagedChannel
+paymentServiceManagedChannel
+```
+
+当前已验证的 stub 命名：
+
+```text
+userServiceBlockingStub
+matchServiceBlockingStub
+imServiceBlockingStub
+postServiceBlockingStub
+paymentServiceBlockingStub
 ```
 
 ### 7.4 Internal Check Controller
@@ -387,9 +420,9 @@ curl http://localhost:8080/internal/check/user-grpc
 
 ---
 
-## 9. 当前还不抽 common-starter
+## 9. 当前还不直接抽 common-starter
 
-当前每个服务先手写：
+当前每个服务已经重复过：
 
 ```text
 gRPC server lifecycle
@@ -397,7 +430,24 @@ gRPC client channel config
 gRPC check controller
 ```
 
-未来可以抽到 `common-starter`：
+这说明模式已经基本稳定，但现在仍不建议立刻做大范围重构。
+
+更稳的做法是先抽“约定”，再抽代码。
+
+当前可以先形成这些约定：
+
+```text
+服务端 gRPC 端口 = HTTP 端口 + 1000。
+服务端类名 = <Service>GrpcService。
+服务端生命周期类名 = <Service>GrpcServerLifecycle。
+客户端配置类名 = <Service>GrpcClientConfig。
+channel bean 名称 = <service>ServiceManagedChannel。
+stub bean 名称 = <service>ServiceBlockingStub。
+stub 参数必须使用 @Qualifier。
+internal check 路径 = /internal/check/<service>-grpc。
+```
+
+未来可以抽到 `common-starter` 或 `common`：
 
 - gRPC server 自动启动。
 - gRPC client 自动创建。
@@ -410,9 +460,9 @@ gRPC check controller
 为什么现在不急着抽：
 
 ```text
-当前只有一条链路。
-先重复两三次，确认模式稳定，再抽公共封装。
-过早抽象容易把错误模式固化。
+当前虽然已经有五条链路，但 Nacos discovery、timeout、retry、traceId 都还没定。
+如果现在直接抽很重的 common-starter，容易把“本地固定地址验证模式”固化。
+更适合先抽命名、端口、Qualifier、验证接口这些低风险约定。
 ```
 
 ---
@@ -441,20 +491,44 @@ gRPC check controller
 
 ---
 
-## 11. 下一条建议链路
+## 11. 当前已验证链路
 
-下一条建议不要直接写复杂业务。
-
-推荐优先：
+当前已经跑通：
 
 ```text
-mobile-gateway -> match-service Ping
+GET /internal/check/user-grpc
+GET /internal/check/match-grpc
+GET /internal/check/im-grpc
+GET /internal/check/post-grpc
+GET /internal/check/payment-grpc
 ```
 
-原因：
+对应端口：
+
+| 链路 | 服务端 gRPC |
+|---|---:|
+| mobile-gateway -> user-service | 19081 |
+| mobile-gateway -> im-service | 19082 |
+| mobile-gateway -> match-service | 19083 |
+| mobile-gateway -> post-service | 19084 |
+| mobile-gateway -> payment-service | 19085 |
+
+---
+
+## 12. 下一步建议
+
+核心服务最小 gRPC 骨架已经闭环。
+
+下一步有两个方向：
 
 ```text
-match-service 是后续滑卡/匹配的核心服务。
-先让 gateway 能调到 match-service，再进入 match-service 真实业务会更稳。
+A. 抽轻量 gRPC 样板约定，不做大重构
+B. 进入 user-service 最小业务表
 ```
 
+推荐先做 A：
+
+```text
+先把命名、端口、@Qualifier、internal check、启动验证方式固定下来。
+后续进入业务表时，服务边界就不容易乱。
+```
