@@ -37,3 +37,8 @@ post-service:
   grpc:
     host: 127.0.0.1
     port: 19084
+
+payment-service:
+  grpc:
+    host: 127.0.0.1
+    port: 19085
