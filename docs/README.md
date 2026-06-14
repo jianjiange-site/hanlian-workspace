@@ -33,6 +33,12 @@ README.md
 记录 `mobile-gateway -> match-service` 第二条 gRPC 调用链，包括 `match-proto` 生成、`match-service` gRPC server、gateway check 接口，以及 IDEA Maven 和多 `ManagedChannel` 注入排障。
 
 ```text
+2026-06-14-mobile-gateway-im-service-gRPC-调用链复盘.md
+```
+
+记录 `mobile-gateway -> im-service` 第三条 gRPC 调用链，包括 `im-proto` 生成、`im-service` gRPC server、gateway check 接口，以及多 `ManagedChannel` 的 `@Qualifier` 约定。
+
+```text
 2026-06-14-当前工程骨架状态总览.md
 ```
 
