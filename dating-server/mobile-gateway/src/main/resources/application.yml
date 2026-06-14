@@ -27,3 +27,8 @@ match-service:
   grpc:
     host: 127.0.0.1
     port: 19083
+
+im-service:
+  grpc:
+    host: 127.0.0.1
+    port: 19082
