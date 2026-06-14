@@ -1,24 +1,270 @@
 # proto
 
-Interface contracts for Hanlian workspace.
+This directory stores the gRPC interface contracts for Hanlian workspace.
 
-This directory contains minimal gRPC proto definitions for:
+The goal of this directory is not only to keep `.proto` files, but also to provide a repeatable path for generating Java/Python packages that business services can depend on.
 
-- user
-- im
-- match
-- post
-- payment
+## 1. Current Modules
 
-Current goal:
+```text
+proto/
+  user/
+  im/
+  match/
+  post/
+  payment/
+```
 
-- keep service boundaries clear
-- define minimal Ping RPCs
-- prepare for later Java/Python package generation
-- publish to Nexus after credentials are available
+Current status:
+
+| Module | Proto file | Java generation | Local install | Nexus deploy |
+|---|---|---|---|---|
+| user | `user/user.proto` | done | done | not yet |
+| im | `im/im.proto` | not yet | not yet | not yet |
+| match | `match/match.proto` | not yet | not yet | not yet |
+| post | `post/post.proto` | not yet | not yet | not yet |
+| payment | `payment/payment.proto` | not yet | not yet | not yet |
+
+`user-proto` is the first verified template.
+
+---
+
+## 2. Why Proto Exists
+
+Business services should communicate through:
+
+```text
+gRPC + Protobuf
+```
+
+This gives the project:
+
+- clear service boundaries
+- strongly typed request and response objects
+- generated client/server stubs
+- a shared contract between gateway, Java services, and later Python services
+
+Business services should not call each other through ad hoc HTTP, and should not read another service's database tables directly.
+
+---
+
+## 3. Current Verified Flow
+
+The verified flow is:
+
+```text
+proto/user/src/main/proto/user.proto
+  -> Maven protobuf plugin
+  -> generated Java message classes
+  -> generated UserServiceGrpc class
+  -> user-proto-0.1.0.jar
+  -> local Maven repository
+  -> user-service / mobile-gateway depend on user-proto
+```
+
+The local Maven repository path is:
+
+```text
+C:\Users\admin\.m2\repository\com\dating\hanlian\proto\user-proto\0.1.0
+```
+
+---
+
+## 4. How To Generate user-proto Locally
+
+Enter the module:
+
+```powershell
+cd E:\heart-dev\workspace\hanlian-workspace\proto\user
+```
+
+Run:
+
+```powershell
+mvn clean install
+```
+
+Expected result:
+
+```text
+BUILD SUCCESS
+```
+
+This command does three important things:
+
+```text
+clean
+  Remove old generated files so the result is fresh.
+
+compile
+  Generate Java source files from user.proto.
+
+install
+  Install user-proto-0.1.0.jar into the local Maven repository.
+```
+
+Generated classes include:
+
+```text
+PingRequest.java
+PingResponse.java
+UserServiceGrpc.java
+```
+
+`UserServiceGrpc.java` is the key class used by both:
+
+- `user-service` as the gRPC server implementation base
+- `mobile-gateway` as the generated gRPC client stub
+
+---
+
+## 5. Why We Use Local install First
+
+The final project convention is to publish generated proto packages to Nexus.
+
+Current limitation:
+
+```text
+Nexus credentials are not available yet.
+```
+
+So the current development rule is:
+
+```text
+Use mvn clean install first.
+Do not run mvn deploy yet.
+```
+
+After Nexus credentials are available, each proto module can add `distributionManagement` and publish to Nexus.
+
+---
+
+## 6. How Business Services Consume Proto
+
+Business services should depend on generated packages.
+
+Example:
+
+```xml
+<dependency>
+    <groupId>com.dating.hanlian.proto</groupId>
+    <artifactId>user-proto</artifactId>
+    <version>0.1.0</version>
+</dependency>
+```
+
+Do not copy `.proto` files into:
+
+```text
+dating-server/*/src/main/proto
+dating-server/*/src/main/resources
+```
+
+Reason:
+
+```text
+The proto module is the single source of truth.
+Business services consume generated artifacts.
+```
+
+---
+
+## 7. How To Copy This Pattern To Other Modules
+
+When generating Java stubs for another module, follow the `proto/user` pattern:
+
+```text
+proto/<service>/
+  VERSION
+  <service>.proto
+  pom.xml
+  README.md
+  src/main/proto/<service>.proto
+```
+
+Steps:
+
+1. Copy `proto/user/pom.xml` as a starting point.
+2. Change `artifactId`, for example `match-proto`.
+3. Keep `groupId` under `com.dating.hanlian.proto` for local consistency.
+4. Copy the service `.proto` into `src/main/proto/`.
+5. Check `option java_package`.
+6. Run `mvn clean install`.
+7. Verify generated Java classes under `target/generated-sources/protobuf`.
+8. Add the generated package dependency to the service that needs it.
+
+Example artifact names:
+
+```text
+user-proto
+im-proto
+match-proto
+post-proto
+payment-proto
+```
+
+---
+
+## 8. Version Rule
+
+Each module has a `VERSION` file.
+
+Current version:
+
+```text
+0.1.0
+```
 
 Rules:
 
-- business services must not copy .proto files into their source trees
-- business services should consume generated packages
-- versions are tracked by each module VERSION file
+- When proto request/response fields change, update the module version.
+- Do not overwrite an already published release version.
+- Before Nexus is available, local `mvn clean install` can reuse the same version during development.
+- After Nexus is available, treat release versions as immutable.
+
+---
+
+## 9. Do Not Commit Generated Output
+
+Do not commit:
+
+```text
+target/
+```
+
+Reason:
+
+```text
+target/ is generated by Maven.
+Every developer can regenerate it locally.
+```
+
+The root `.gitignore` already ignores:
+
+```gitignore
+target/
+```
+
+Commit only:
+
+```text
+pom.xml
+README.md
+VERSION
+*.proto
+src/main/proto/*.proto
+```
+
+---
+
+## 10. Current Limitations
+
+Current limitations:
+
+- Only `user-proto` has been verified for Java generation.
+- Python package generation is not configured yet.
+- Nexus deploy is not configured yet.
+- Common proto types are not extracted yet.
+- gRPC service discovery through Nacos is not implemented yet.
+
+These are expected limitations for the current engineering skeleton stage.
