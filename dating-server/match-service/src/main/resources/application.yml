@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: match-service
+  config:
+    import: optional:nacos:match-service.yaml
   cloud:
     nacos:
       discovery:
@@ -11,6 +13,12 @@ spring:
         namespace: dev-hanlian
         username: nacos
         password: ${NACOS_PASSWORD}
+      config:
+        server-addr: 38.76.188.242:8848
+        namespace: dev-hanlian
+        username: nacos
+        password: ${NACOS_PASSWORD}
+        file-extension: yaml
 
 management:
   endpoints:

@@ -68,6 +68,18 @@ gRPC服务接入模板.md
 
 面向 proto / gRPC 零基础的人，讲清概念、项目里的实际用法、当前五条已跑通链路和常见排错思路。
 
+```text
+post-service-Nacos-Config-配置说明.md
+```
+
+记录 `post-service` 从 Nacos Config 读取 PostgreSQL、Redis、MinIO 配置的 Data ID、配置模板和验证方式。
+
+```text
+Nacos-Config-服务配置说明.md
+```
+
+记录各服务接入 Nacos Config 的统一约定、Data ID 命名、环境变量边界和当前配置模板。
+
 ## 约定
 
 - 复盘文档、接入说明、阶段总结放在 `docs/`。

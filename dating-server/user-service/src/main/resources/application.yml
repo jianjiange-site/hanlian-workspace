@@ -4,15 +4,8 @@ server:
 spring:
   application:
     name: user-service
-  datasource:
-    url: jdbc:postgresql://38.76.188.242:5433/dating_dev_hanlian?stringtype=unspecified
-    username: jianjian_test
-    password: ${POSTGRES_PASSWORD}
-    driver-class-name: org.postgresql.Driver
-    hikari:
-      maximum-pool-size: 5
-      minimum-idle: 1
-      connection-init-sql: SET TIME ZONE 'UTC'
+  config:
+    import: optional:nacos:user-service.yaml
   cloud:
     nacos:
       discovery:
@@ -20,13 +13,12 @@ spring:
         namespace: dev-hanlian
         username: nacos
         password: ${NACOS_PASSWORD}
-  data:
-    redis:
-      host: 38.76.188.242
-      port: 6380
-      password: ${REDIS_PASSWORD}
-      database: 1
-      timeout: 3s
+      config:
+        server-addr: 38.76.188.242:8848
+        namespace: dev-hanlian
+        username: nacos
+        password: ${NACOS_PASSWORD}
+        file-extension: yaml
 
 management:
   endpoints:
