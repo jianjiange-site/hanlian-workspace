@@ -39,6 +39,18 @@ README.md
 记录 `mobile-gateway -> im-service` 第三条 gRPC 调用链，包括 `im-proto` 生成、`im-service` gRPC server、gateway check 接口，以及多 `ManagedChannel` 的 `@Qualifier` 约定。
 
 ```text
+2026-06-14-mobile-gateway-post-service-gRPC-调用链复盘.md
+```
+
+记录 `mobile-gateway -> post-service` 第四条 gRPC 调用链，包括 `post-proto` 生成、`post-service` gRPC server 和 gateway check 接口。
+
+```text
+2026-06-14-mobile-gateway-payment-service-gRPC-调用链复盘.md
+```
+
+记录 `mobile-gateway -> payment-service` 第五条 gRPC 调用链，包括 `payment-proto` 生成、`payment-service` gRPC server、gateway check 接口，以及五个 `ManagedChannel` 共存约定。
+
+```text
 2026-06-14-当前工程骨架状态总览.md
 ```
 
