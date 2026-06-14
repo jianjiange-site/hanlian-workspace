@@ -27,6 +27,12 @@ README.md
 记录 `mobile-gateway -> user-service` 第一条 gRPC 调用链，包括 proto 生成、gRPC server、grpcurl 和 gateway check 接口。
 
 ```text
+2026-06-14-mobile-gateway-match-service-gRPC-调用链复盘.md
+```
+
+记录 `mobile-gateway -> match-service` 第二条 gRPC 调用链，包括 `match-proto` 生成、`match-service` gRPC server、gateway check 接口，以及 IDEA Maven 和多 `ManagedChannel` 注入排障。
+
+```text
 2026-06-14-当前工程骨架状态总览.md
 ```
 
@@ -44,4 +50,3 @@ gRPC服务接入模板.md
 - 根目录 `README.md` 保留为项目入口说明。
 - 文档里不写真实密码、token、AK/SK。
 - 具体密码只放本机环境变量、IDE Run Configuration 或后续 Secret/Nacos 配置。
-
