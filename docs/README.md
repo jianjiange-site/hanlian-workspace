@@ -30,6 +30,7 @@ docs/
 - `gRPC服务接入模板.md`：已验证的 gRPC server/client 接入模板，后续服务可按此复制。
 - `Nacos-Config-服务配置说明.md`：各服务接入 Nacos Config 的统一约定、Data ID 命名、环境变量边界和配置模板。
 - `post-service-Nacos-Config-配置说明.md`：`post-service` 从 Nacos Config 读取 PostgreSQL、Redis、MinIO 配置的说明。
+- `post-service-4天企业交付需求单.md`：`post-service` 4 天压缩交付周期的功能工单、优先级、验收标准和风险收口。
 - `小白看懂proto和gRPC.md`：面向 proto / gRPC 零基础的说明文档，包含项目里的实际用法和排错思路。
 
 ### 时间线文档
