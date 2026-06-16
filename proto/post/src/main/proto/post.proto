@@ -2,18 +2,176 @@ syntax = "proto3";
 
 package dating.post.v1;
 
+// 生成 Java 类时，每个 message 单独生成一个 class
 option java_multiple_files = true;
+
+// Java 包名
 option java_package = "com.dating.hanlian.proto.post.v1";
+
+// 外层类名
 option java_outer_classname = "PostProto";
 
+// 这是 post-service 对外暴露的 gRPC 接口
 service PostService {
+  // 健康检查，用来确认服务活着
   rpc Ping (PingRequest) returns (PingResponse);
+
+  // 发帖
+  rpc CreatePost (CreatePostRequest) returns (CreatePostResponse);
+
+  // 删除帖子
+  rpc DeletePost (DeletePostRequest) returns (DeletePostResponse);
+
+  // 查帖子详情
+  rpc GetPostDetail (GetPostDetailRequest) returns (GetPostDetailResponse);
+
+  // 查某个用户发过的帖子列表
+  rpc ListUserPosts (ListUserPostsRequest) returns (ListUserPostsResponse);
+
+  // 点赞 / 取消点赞
+  rpc LikePost (LikePostRequest) returns (LikePostResponse);
+
+  // 发评论
+  rpc CreateComment (CreateCommentRequest) returns (CreateCommentResponse);
+
+  // 查评论列表
+  rpc ListComments (ListCommentsRequest) returns (ListCommentsResponse);
+
+  // 查推荐 Feed
+  rpc GetRecommendFeed (GetRecommendFeedRequest) returns (GetRecommendFeedResponse);
 }
 
+// -------------------- 基础检查 --------------------
+
 message PingRequest {
-  string message = 1;
+  string message = 1; // 传一句话进来测试
 }
 
 message PingResponse {
-  string message = 1;
+  string message = 1; // 原样返回
+}
+
+// -------------------- 通用数据结构 --------------------
+
+// 帖子详情对象
+message Post {
+  int64 post_id = 1;       // 帖子业务主键
+  int64 user_id = 2;       // 发帖人
+  string content = 3;      // 文本内容
+  repeated string image_keys = 4; // 图片对象 key 列表
+  int32 like_count = 5;    // 点赞数
+  int32 comment_count = 6; // 评论数
+  bool liked_by_me = 7;    // 当前用户是否点过赞
+  int64 created_at = 8;    // 创建时间
+}
+
+// 评论对象
+message Comment {
+  int64 comment_id = 1;        // 评论业务主键
+  int64 post_id = 2;           // 属于哪个帖子
+  int64 user_id = 3;           // 评论人
+  int64 root_id = 4;           // 根评论ID，一级评论时可以是 0
+  int64 parent_id = 5;         // 父评论ID
+  int64 reply_to_user_id = 6;  // 回复给谁
+  string content = 7;          // 评论内容
+  int64 created_at = 8;        // 创建时间
+}
+
+// -------------------- 发帖 --------------------
+
+message CreatePostRequest {
+  int64 user_id = 1;              // 谁发的
+  string content = 2;             // 文本内容
+  repeated string image_keys = 3; // 图片 key 列表
+}
+
+message CreatePostResponse {
+  int64 post_id = 1; // 新帖子的业务ID
+}
+
+message DeletePostRequest {
+  int64 user_id = 1; // 谁删
+  int64 post_id = 2; // 删哪个
+}
+
+message DeletePostResponse {
+  bool success = 1; // 是否删除成功
+}
+
+// -------------------- 查帖子 --------------------
+
+message GetPostDetailRequest {
+  int64 user_id = 1; // 当前查看人
+  int64 post_id = 2; // 要查的帖子
+}
+
+message GetPostDetailResponse {
+  Post post = 1; // 返回完整帖子对象
+}
+
+message ListUserPostsRequest {
+  int64 viewer_user_id = 1; // 当前看的人
+  int64 target_user_id = 2; // 要看的那个用户
+  int64 cursor_post_id = 3;  // 游标分页
+  int32 page_size = 4;       // 每页数量
+}
+
+message ListUserPostsResponse {
+  repeated Post posts = 1;      // 帖子列表
+  int64 next_cursor_post_id = 2; // 下一页游标
+  bool has_more = 3;             // 是否还有下一页
+}
+
+// -------------------- 点赞 --------------------
+
+message LikePostRequest {
+  int64 user_id = 1; // 点赞的人
+  int64 post_id = 2; // 点哪个帖子
+  bool liked = 3;    // true=点赞，false=取消点赞
+}
+
+message LikePostResponse {
+  bool success = 1;   // 是否成功
+  int32 like_count = 2; // 当前点赞数
+  bool liked = 3;     // 当前是否已点赞
+}
+
+// -------------------- 评论 --------------------
+
+message CreateCommentRequest {
+  int64 user_id = 1;           // 评论人
+  int64 post_id = 2;           // 哪个帖子
+  string content = 3;          // 评论内容
+  int64 root_id = 4;           // 根评论ID
+  int64 parent_id = 5;         // 父评论ID
+  int64 reply_to_user_id = 6;  // 回复给谁
+}
+
+message CreateCommentResponse {
+  int64 comment_id = 1;    // 新评论ID
+  int32 comment_count = 2;  // 当前评论数
+}
+
+message ListCommentsRequest {
+  int64 user_id = 1;       // 当前查看人
+  int64 post_id = 2;       // 哪个帖子
+  int64 cursor_comment_id = 3; // 游标
+  int32 page_size = 4;     // 每页数量
+}
+
+message ListCommentsResponse {
+  repeated Comment comments = 1; // 评论列表
+  int64 next_cursor_comment_id = 2;
+  bool has_more = 3;
+}
+
+// -------------------- Feed --------------------
+
+message GetRecommendFeedRequest {
+  int64 user_id = 1; // 当前用户
+  int32 page_size = 2; // 一页多少条
+}
+
+message GetRecommendFeedResponse {
+  repeated Post posts = 1; // Feed 帖子列表
 }
