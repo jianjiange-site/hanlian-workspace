@@ -54,6 +54,13 @@ public class PostDebugController {
         );
     }
 
+    @DeleteMapping("/{postId}")
+    public DeletePostDebugResponse deletePost(@PathVariable("postId") Long postId,
+                                              @RequestParam("userId") Long userId) {
+        boolean success = postWriteService.deletePost(userId, postId);
+        return new DeletePostDebugResponse(success);
+    }
+
     public record CreatePostDebugRequest(
             Long userId,
             String content,
@@ -75,6 +82,11 @@ public class PostDebugController {
             int commentCount,
             boolean likedByMe,
             long createdAt
+    ) {
+    }
+
+    public record DeletePostDebugResponse(
+            boolean success
     ) {
     }
 }

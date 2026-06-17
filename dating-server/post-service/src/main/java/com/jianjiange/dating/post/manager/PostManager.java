@@ -1,6 +1,7 @@
 package com.jianjiange.dating.post.manager;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.jianjiange.dating.post.entity.PostEntity;
 import com.jianjiange.dating.post.entity.PostImageEntity;
 import com.jianjiange.dating.post.entity.PostStatEntity;
@@ -106,5 +107,17 @@ public class PostManager {
      */
     public Optional<PostStatEntity> findStatByPostId(Long postId) {
         return Optional.ofNullable(postStatMapper.selectById(postId));
+    }
+
+    public int markPostDeleted(Long postId, Long userId) {
+        LambdaUpdateWrapper<PostEntity> wrapper = new LambdaUpdateWrapper<PostEntity>()
+                .eq(PostEntity::getPostId, postId)
+                .eq(PostEntity::getUserId, userId)
+                .eq(PostEntity::getDeleted, 0)
+                .set(PostEntity::getStatus, 0)
+                .set(PostEntity::getDeleted, 1)
+                .set(PostEntity::getUpdatedAt, OffsetDateTime.now());
+
+        return postMapper.update(null, wrapper);
     }
 }

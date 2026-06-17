@@ -57,8 +57,9 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
 
     @Override
     public void deletePost(DeletePostRequest request, StreamObserver<DeletePostResponse> responseObserver) {
+        boolean success = postWriteService.deletePost(request.getUserId(), request.getPostId());
         DeletePostResponse response = DeletePostResponse.newBuilder()
-                .setSuccess(false)
+                .setSuccess(success)
                 .build();
 
         responseObserver.onNext(response);

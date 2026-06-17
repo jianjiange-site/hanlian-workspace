@@ -48,4 +48,21 @@ public class PostWriteService {
         postManager.createPost(postId, userId, content, imageKeys);
         return postId;
     }
+
+    @Transactional
+    public boolean deletePost(Long userId, Long postId) {
+        if (userId == null || userId <= 0) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        if (postId == null || postId <= 0) {
+            throw new IllegalArgumentException("postId is required");
+        }
+
+        int updated = postManager.markPostDeleted(postId, userId);
+        if (updated == 0) {
+            throw new IllegalArgumentException("post not found or no permission");
+        }
+
+        return true;
+    }
 }
