@@ -1,5 +1,6 @@
 package com.jianjiange.dating.post.manager;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.jianjiange.dating.post.entity.PostEntity;
 import com.jianjiange.dating.post.entity.PostImageEntity;
 import com.jianjiange.dating.post.entity.PostStatEntity;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 
 @Component
@@ -66,5 +68,43 @@ public class PostManager {
         stat.setCommentCount(0);
         stat.setUpdatedAt(now);
         postStatMapper.insert(stat);
+    }
+
+    /**
+     * 查看帖子
+     * 条件：根据帖子ID搜索，帖子状态正常并且未被删除
+     * @param postId
+     * @return
+     */
+    public Optional<PostEntity> findNormalPostByPostId(Long postId) {
+        LambdaQueryWrapper<PostEntity> wrapper = new LambdaQueryWrapper<PostEntity>()
+                .eq(PostEntity::getPostId, postId)
+                .eq(PostEntity::getStatus, 1)
+                .eq(PostEntity::getDeleted, 0)
+                .last("LIMIT 1");
+
+        return Optional.ofNullable(postMapper.selectOne(wrapper));
+    }
+
+    /**
+     * 根据帖子ID查询该帖子的iamges列表，并按SortOrder排序返回
+     * @param postId
+     * @return
+     */
+    public List<PostImageEntity> listImagesByPostId(Long postId) {
+        LambdaQueryWrapper<PostImageEntity> wrapper = new LambdaQueryWrapper<PostImageEntity>()
+                .eq(PostImageEntity::getPostId, postId)
+                .orderByAsc(PostImageEntity::getSortOrder);
+
+        return postImageMapper.selectList(wrapper);
+    }
+
+    /**
+     * 查询点赞，评论...
+     * @param postId
+     * @return
+     */
+    public Optional<PostStatEntity> findStatByPostId(Long postId) {
+        return Optional.ofNullable(postStatMapper.selectById(postId));
     }
 }

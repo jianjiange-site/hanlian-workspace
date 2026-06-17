@@ -1,5 +1,7 @@
 package com.jianjiange.dating.post.controller;
 
+import com.dating.hanlian.proto.post.v1.Post;
+import com.jianjiange.dating.post.service.PostReadService;
 import com.jianjiange.dating.post.service.PostWriteService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,8 +13,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PostDebugController {
 
+    private final PostReadService postReadService;
     private final PostWriteService postWriteService;
 
+    /**
+     * 新建帖子
+     * @param request
+     * @return
+     */
     @PostMapping
     public CreatePostDebugResponse createPost(@RequestBody CreatePostDebugRequest request) {
         Long postId = postWriteService.createPost(
@@ -24,6 +32,28 @@ public class PostDebugController {
         return new CreatePostDebugResponse(postId);
     }
 
+    /**
+     * 查看帖子
+     * @param postId
+     * @param userId
+     * @return
+     */
+    @GetMapping("/{postId}")
+    public PostDebugDetailResponse getPostDetail(@PathVariable("postId") Long postId,
+                                                 @RequestParam("userId") Long userId) {
+        Post post = postReadService.getPostDetail(userId, postId);
+        return new PostDebugDetailResponse(
+                post.getPostId(),
+                post.getUserId(),
+                post.getContent(),
+                post.getImageKeysList(),
+                post.getLikeCount(),
+                post.getCommentCount(),
+                post.getLikedByMe(),
+                post.getCreatedAt()
+        );
+    }
+
     public record CreatePostDebugRequest(
             Long userId,
             String content,
@@ -33,6 +63,18 @@ public class PostDebugController {
 
     public record CreatePostDebugResponse(
             Long postId
+    ) {
+    }
+
+    public record PostDebugDetailResponse(
+            Long postId,
+            Long userId,
+            String content,
+            List<String> imageKeys,
+            int likeCount,
+            int commentCount,
+            boolean likedByMe,
+            long createdAt
     ) {
     }
 }

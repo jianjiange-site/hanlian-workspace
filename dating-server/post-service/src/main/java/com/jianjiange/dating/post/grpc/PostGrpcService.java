@@ -18,9 +18,11 @@ import com.dating.hanlian.proto.post.v1.ListUserPostsRequest;
 import com.dating.hanlian.proto.post.v1.ListUserPostsResponse;
 import com.dating.hanlian.proto.post.v1.PingRequest;
 import com.dating.hanlian.proto.post.v1.PingResponse;
+import com.dating.hanlian.proto.post.v1.Post;
 import com.dating.hanlian.proto.post.v1.PostServiceGrpc;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import com.jianjiange.dating.post.service.PostReadService;
 import com.jianjiange.dating.post.service.PostWriteService;
 
 @Component
@@ -65,7 +67,10 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
 
     @Override
     public void getPostDetail(GetPostDetailRequest request, StreamObserver<GetPostDetailResponse> responseObserver) {
-        GetPostDetailResponse response = GetPostDetailResponse.newBuilder().build();
+        Post post = postReadService.getPostDetail(request.getUserId(), request.getPostId());
+        GetPostDetailResponse response = GetPostDetailResponse.newBuilder()
+                .setPost(post)
+                .build();
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
@@ -123,8 +128,10 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
     }
 
     private final PostWriteService postWriteService;
+    private final PostReadService postReadService;
 
-    public PostGrpcService(PostWriteService postWriteService) {
+    public PostGrpcService(PostWriteService postWriteService, PostReadService postReadService) {
         this.postWriteService = postWriteService;
+        this.postReadService = postReadService;
     }
 }
