@@ -21,6 +21,7 @@ import com.dating.hanlian.proto.post.v1.PingResponse;
 import com.dating.hanlian.proto.post.v1.PostServiceGrpc;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import com.jianjiange.dating.post.service.PostWriteService;
 
 @Component
 public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
@@ -35,10 +36,17 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
         responseObserver.onCompleted();
     }
 
+
     @Override
     public void createPost(CreatePostRequest request, StreamObserver<CreatePostResponse> responseObserver) {
+        Long postId = postWriteService.createPost(
+                request.getUserId(),
+                request.getContent(),
+                request.getImageKeysList()
+        );
+
         CreatePostResponse response = CreatePostResponse.newBuilder()
-                .setPostId(0L)
+                .setPostId(postId)
                 .build();
 
         responseObserver.onNext(response);
@@ -112,5 +120,11 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+    }
+
+    private final PostWriteService postWriteService;
+
+    public PostGrpcService(PostWriteService postWriteService) {
+        this.postWriteService = postWriteService;
     }
 }
