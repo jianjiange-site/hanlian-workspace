@@ -49,6 +49,12 @@ public class PostWriteService {
         return postId;
     }
 
+    /**
+     * 删除帖子
+     * @param userId
+     * @param postId
+     * @return
+     */
     @Transactional
     public boolean deletePost(Long userId, Long postId) {
         if (userId == null || userId <= 0) {
