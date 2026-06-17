@@ -34,3 +34,8 @@ management:
 grpc:
   server:
     port: 19084
+
+app:
+  cache:
+    key-prefix: ${REDIS_KEY_PREFIX:hanlian}
+    stat-delta-ttl: 1d

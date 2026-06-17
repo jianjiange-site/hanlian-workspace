@@ -37,6 +37,9 @@ public class PostReadService {
                 .orElseThrow(() -> new IllegalArgumentException("post not found"));
         List<PostImageEntity> images = postManager.listImagesByPostId(postId);
         PostStatEntity stat = postManager.findStatByPostId(postId).orElse(null);
+        boolean likedByMe = postManager.findLikeByUserIdAndPostId(viewerUserId, postId)
+                .map(like -> Integer.valueOf(1).equals(like.getStatus()))
+                .orElse(false);
 
         Post.Builder builder = Post.newBuilder()
                 .setPostId(post.getPostId())
@@ -44,7 +47,7 @@ public class PostReadService {
                 .setContent(post.getContent())
                 .setLikeCount(stat == null ? 0 : stat.getLikeCount())
                 .setCommentCount(stat == null ? 0 : stat.getCommentCount())
-                .setLikedByMe(false)
+                .setLikedByMe(likedByMe)
                 .setCreatedAt(toEpochMillis(post.getCreatedAt()));
 
         for (PostImageEntity image : images) {

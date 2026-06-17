@@ -21,12 +21,19 @@ import com.dating.hanlian.proto.post.v1.PingResponse;
 import com.dating.hanlian.proto.post.v1.Post;
 import com.dating.hanlian.proto.post.v1.PostServiceGrpc;
 import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import com.jianjiange.dating.post.service.PostLikeService;
 import com.jianjiange.dating.post.service.PostReadService;
 import com.jianjiange.dating.post.service.PostWriteService;
 
 @Component
+@RequiredArgsConstructor
 public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
+
+    private final PostWriteService postWriteService;
+    private final PostReadService postReadService;
+    private final PostLikeService postLikeService;
 
     @Override
     public void ping(PingRequest request, StreamObserver<PingResponse> responseObserver) {
@@ -89,10 +96,16 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
 
     @Override
     public void likePost(LikePostRequest request, StreamObserver<LikePostResponse> responseObserver) {
+        PostLikeService.LikePostResult result = postLikeService.likePost(
+                request.getUserId(),
+                request.getPostId(),
+                request.getLiked()
+        );
+
         LikePostResponse response = LikePostResponse.newBuilder()
-                .setSuccess(false)
-                .setLiked(request.getLiked())
-                .setLikeCount(0)
+                .setSuccess(result.success())
+                .setLiked(result.liked())
+                .setLikeCount(result.likeCount())
                 .build();
 
         responseObserver.onNext(response);
@@ -126,13 +139,5 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
 
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-    }
-
-    private final PostWriteService postWriteService;
-    private final PostReadService postReadService;
-
-    public PostGrpcService(PostWriteService postWriteService, PostReadService postReadService) {
-        this.postWriteService = postWriteService;
-        this.postReadService = postReadService;
     }
 }

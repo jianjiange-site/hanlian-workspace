@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.jianjiange.dating.post.entity.PostEntity;
 import com.jianjiange.dating.post.entity.PostImageEntity;
+import com.jianjiange.dating.post.entity.PostLikeEntity;
 import com.jianjiange.dating.post.entity.PostStatEntity;
+import com.jianjiange.dating.post.mapper.PostLikeMapper;
 import com.jianjiange.dating.post.mapper.PostImageMapper;
 import com.jianjiange.dating.post.mapper.PostMapper;
 import com.jianjiange.dating.post.mapper.PostStatMapper;
@@ -21,13 +23,16 @@ public class PostManager {
     private final PostMapper postMapper;
     private final PostImageMapper postImageMapper;
     private final PostStatMapper postStatMapper;
+    private final PostLikeMapper postLikeMapper;
 
     public PostManager(PostMapper postMapper,
                        PostImageMapper postImageMapper,
-                       PostStatMapper postStatMapper) {
+                       PostStatMapper postStatMapper,
+                       PostLikeMapper postLikeMapper) {
         this.postMapper = postMapper;
         this.postImageMapper = postImageMapper;
         this.postStatMapper = postStatMapper;
+        this.postLikeMapper = postLikeMapper;
     }
 
     /**
@@ -109,6 +114,13 @@ public class PostManager {
         return Optional.ofNullable(postStatMapper.selectById(postId));
     }
 
+
+    /**
+     * 逻辑删除，实际上是updata,返回是0或1（影响的数据库数据条数）
+     * @param postId
+     * @param userId
+     * @return
+     */
     public int markPostDeleted(Long postId, Long userId) {
         LambdaUpdateWrapper<PostEntity> wrapper = new LambdaUpdateWrapper<PostEntity>()
                 .eq(PostEntity::getPostId, postId)
@@ -119,5 +131,41 @@ public class PostManager {
                 .set(PostEntity::getUpdatedAt, OffsetDateTime.now());
 
         return postMapper.update(null, wrapper);
+    }
+
+    public boolean existsNormalPost(Long postId) {
+        return findNormalPostByPostId(postId).isPresent();
+    }
+
+    public Optional<PostLikeEntity> findLikeByUserIdAndPostId(Long userId, Long postId) {
+        LambdaQueryWrapper<PostLikeEntity> wrapper = new LambdaQueryWrapper<PostLikeEntity>()
+                .eq(PostLikeEntity::getUserId, userId)
+                .eq(PostLikeEntity::getPostId, postId)
+                .last("LIMIT 1");
+
+        return Optional.ofNullable(postLikeMapper.selectOne(wrapper));
+    }
+
+    public void upsertLike(Long userId, Long postId, int status) {
+        postLikeMapper.upsertLike(userId, postId, status, OffsetDateTime.now());
+    }
+
+    public int updateLikeStatus(Long userId, Long postId, int status) {
+        LambdaUpdateWrapper<PostLikeEntity> wrapper = new LambdaUpdateWrapper<PostLikeEntity>()
+                .eq(PostLikeEntity::getUserId, userId)
+                .eq(PostLikeEntity::getPostId, postId)
+                .set(PostLikeEntity::getStatus, status)
+                .set(PostLikeEntity::getUpdatedAt, OffsetDateTime.now());
+
+        return postLikeMapper.update(null, wrapper);
+    }
+
+    public int increaseLikeCount(Long postId, int delta) {
+        LambdaUpdateWrapper<PostStatEntity> wrapper = new LambdaUpdateWrapper<PostStatEntity>()
+                .eq(PostStatEntity::getPostId, postId)
+                .setSql("like_count = GREATEST(like_count + (" + delta + "), 0)")
+                .set(PostStatEntity::getUpdatedAt, OffsetDateTime.now());
+
+        return postStatMapper.update(null, wrapper);
     }
 }
