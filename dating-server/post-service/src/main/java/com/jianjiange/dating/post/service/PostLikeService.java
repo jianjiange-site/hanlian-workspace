@@ -1,11 +1,11 @@
 package com.jianjiange.dating.post.service;
 
-import com.jianjiange.dating.post.config.PostCacheProperties;
 import com.jianjiange.dating.post.entity.PostLikeEntity;
 import com.jianjiange.dating.post.entity.PostStatEntity;
+import com.jianjiange.dating.post.exception.BusinessException;
 import com.jianjiange.dating.post.manager.PostManager;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,8 +19,7 @@ public class PostLikeService {
     private static final int STATUS_UNLIKED = 0;
 
     private final PostManager postManager;
-    private final StringRedisTemplate stringRedisTemplate;
-    private final PostCacheProperties cacheProperties;
+    private final PostStatRedisService postStatRedisService;
 
     /**
      * 点赞或取消点赞帖子。
@@ -34,7 +33,7 @@ public class PostLikeService {
     public LikePostResult likePost(Long userId, Long postId, boolean liked) {
         validate(userId, postId);
         if (!postManager.existsNormalPost(postId)) {
-            throw new IllegalArgumentException("post not found");
+            throw new BusinessException(HttpStatus.NOT_FOUND, "帖子不存在");
         }
 
         // 1. 读取用户当前点赞状态，避免重复点赞或重复取消导致计数不准。
@@ -51,13 +50,15 @@ public class PostLikeService {
         // 2. 只有状态发生变化才更新计数，重复请求保持幂等。
         int delta = calculateDelta(oldStatus, newStatus);
         if (delta != 0) {
-            postManager.increaseLikeCount(postId, delta);
-            writeLikeDeltaToRedis(postId, delta);
+            //postManager.increaseLikeCount(postId, delta);
+            postStatRedisService.increaseLikeDelta(postId, delta);
         }
 
-        int likeCount = postManager.findStatByPostId(postId)
+        int dbLikeCount = postManager.findStatByPostId(postId)
                 .map(PostStatEntity::getLikeCount)
                 .orElse(0);
+        int likeCount = dbLikeCount + postStatRedisService.getLikeDelta(postId);
+        likeCount = Math.max(likeCount, 0);
         return new LikePostResult(true, liked, likeCount);
     }
 
@@ -80,12 +81,6 @@ public class PostLikeService {
             return 0;
         }
         return newStatus == STATUS_LIKED ? 1 : -1;
-    }
-
-    private void writeLikeDeltaToRedis(Long postId, int delta) {
-        String deltaKey = cacheProperties.getKeyPrefix() + ":post:stat:like:" + postId;
-        stringRedisTemplate.opsForValue().increment(deltaKey, delta);
-        stringRedisTemplate.expire(deltaKey, cacheProperties.getStatDeltaTtl());
     }
 
     public record LikePostResult(

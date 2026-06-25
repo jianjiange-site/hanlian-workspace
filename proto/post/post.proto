@@ -174,5 +174,6 @@ message GetRecommendFeedRequest {
 
 message GetRecommendFeedResponse {
   repeated Post posts = 1; // Feed 帖子列表
+  int64 next_cursor_post_id = 2; // 下一页游标
+  bool has_more = 3; // 是否还有下一页
 }
-

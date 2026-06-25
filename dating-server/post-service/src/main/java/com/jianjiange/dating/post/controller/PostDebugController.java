@@ -1,9 +1,8 @@
 package com.jianjiange.dating.post.controller;
 
+import com.dating.hanlian.proto.post.v1.Comment;
 import com.dating.hanlian.proto.post.v1.Post;
-import com.jianjiange.dating.post.service.PostLikeService;
-import com.jianjiange.dating.post.service.PostReadService;
-import com.jianjiange.dating.post.service.PostWriteService;
+import com.jianjiange.dating.post.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +16,8 @@ public class PostDebugController {
     private final PostReadService postReadService;
     private final PostWriteService postWriteService;
     private final PostLikeService postLikeService;
+    private final PostCommentService postCommentService;
+    private final FeedService feedService;
 
     /**
      * 新建帖子
@@ -69,12 +70,57 @@ public class PostDebugController {
         return new DeletePostDebugResponse(success);
     }
 
+
     @PostMapping("/{postId}/like")
     public LikePostDebugResponse likePost(@PathVariable("postId") Long postId,
                                           @RequestParam("userId") Long userId,
                                           @RequestParam("liked") boolean liked) {
         PostLikeService.LikePostResult result = postLikeService.likePost(userId, postId, liked);
         return new LikePostDebugResponse(result.success(), result.liked(), result.likeCount());
+    }
+
+    @PostMapping("/{postId}/comments")
+    public CreateCommentDebugResponse createComment(@PathVariable("postId") Long postId,
+                                                    @RequestBody CreateCommentDebugRequest request) {
+        PostCommentService.CreateCommentResult result = postCommentService.createComment(
+                request.userId(),
+                postId,
+                request.content()
+        );
+
+        return new CreateCommentDebugResponse(result.commentId(), result.commentCount());
+    }
+
+    @GetMapping("/{postId}/comments")
+    public ListCommentsDebugResponse listComments(@PathVariable("postId") Long postId,
+                                                  @RequestParam("userId") Long userId,
+                                                  @RequestParam(value = "cursor", defaultValue = "0") Long cursor,
+                                                  @RequestParam(value = "pageSize", defaultValue = "20") int pageSize) {
+        PostCommentService.ListCommentsResult result = postCommentService.listComments(
+                userId,
+                postId,
+                cursor,
+                pageSize
+        );
+
+        List<CommentDebugResponse> comments = result.comments().stream()
+                .map(this::toDebugComment)
+                .toList();
+
+        return new ListCommentsDebugResponse(comments, result.nextCursorCommentId(), result.hasMore());
+    }
+
+    private CommentDebugResponse toDebugComment(Comment comment) {
+        return new CommentDebugResponse(
+                comment.getCommentId(),
+                comment.getPostId(),
+                comment.getUserId(),
+                comment.getRootId(),
+                comment.getParentId(),
+                comment.getReplyToUserId(),
+                comment.getContent(),
+                comment.getCreatedAt()
+        );
     }
 
     public record CreatePostDebugRequest(
@@ -112,4 +158,102 @@ public class PostDebugController {
             int likeCount
     ) {
     }
+
+    public record CreateCommentDebugRequest(
+            Long userId,
+            String content
+    ) {
+    }
+
+    public record CreateCommentDebugResponse(
+            Long commentId,
+            int commentCount
+    ) {
+    }
+
+    public record CommentDebugResponse(
+            Long commentId,
+            Long postId,
+            Long userId,
+            Long rootId,
+            Long parentId,
+            Long replyToUserId,
+            String content,
+            long createdAt
+    ) {
+    }
+
+    public record ListCommentsDebugResponse(
+            List<CommentDebugResponse> comments,
+            long nextCursorCommentId,
+            boolean hasMore
+    ) {
+    }
+
+    @GetMapping("/user/{targetUserId}")
+    public ListUserPostsDebugResponse listUserPosts(@PathVariable("targetUserId") Long targetUserId,
+                                                    @RequestParam("viewerUserId") Long viewerUserId,
+                                                    @RequestParam(value = "cursor", defaultValue = "0") Long cursor,
+                                                    @RequestParam(value = "pageSize", defaultValue = "20") int pageSize) {
+        PostReadService.ListUserPostsResult result = postReadService.listUserPosts(
+                viewerUserId,
+                targetUserId,
+                cursor,
+                pageSize
+        );
+
+        return new ListUserPostsDebugResponse(
+                result.posts().stream()
+                        .map(this::toDebugPost)
+                        .toList(),
+                result.nextCursorPostId(),
+                result.hasMore()
+        );
+    }
+
+    private PostDebugDetailResponse toDebugPost(Post post) {
+        return new PostDebugDetailResponse(
+                post.getPostId(),
+                post.getUserId(),
+                post.getContent(),
+                post.getImageKeysList(),
+                post.getLikeCount(),
+                post.getCommentCount(),
+                post.getLikedByMe(),
+                post.getCreatedAt()
+        );
+    }
+
+    public record ListUserPostsDebugResponse(
+            List<PostDebugDetailResponse> posts,
+            long nextCursorPostId,
+            boolean hasMore
+    ) {
+    }
+
+    @GetMapping("/feed")
+    public FeedDebugResponse getRecommendFeed(@RequestParam("userId") Long userId,
+                                              @RequestParam(value = "pageSize", defaultValue = "10") int pageSize) {
+        FeedService.RecommendFeedResult result = feedService.getRecommendFeed(userId, pageSize);
+
+        List<PostDebugDetailResponse> posts = result.posts()
+                .stream()
+                .map(this::toDebugPost)
+                .toList();
+
+        return new FeedDebugResponse(
+                posts,
+                result.nextCursorPostId(),
+                result.hasMore()
+        );
+    }
+
+    public record FeedDebugResponse(
+            List<PostDebugDetailResponse> posts,
+            long nextCursorPostId,
+            boolean hasMore
+    ) {
+    }
+
+
 }

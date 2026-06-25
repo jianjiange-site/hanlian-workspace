@@ -2,14 +2,8 @@ package com.jianjiange.dating.post.manager;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.jianjiange.dating.post.entity.PostEntity;
-import com.jianjiange.dating.post.entity.PostImageEntity;
-import com.jianjiange.dating.post.entity.PostLikeEntity;
-import com.jianjiange.dating.post.entity.PostStatEntity;
-import com.jianjiange.dating.post.mapper.PostLikeMapper;
-import com.jianjiange.dating.post.mapper.PostImageMapper;
-import com.jianjiange.dating.post.mapper.PostMapper;
-import com.jianjiange.dating.post.mapper.PostStatMapper;
+import com.jianjiange.dating.post.entity.*;
+import com.jianjiange.dating.post.mapper.*;
 import org.springframework.stereotype.Component;
 
 import java.time.OffsetDateTime;
@@ -24,18 +18,23 @@ public class PostManager {
     private final PostImageMapper postImageMapper;
     private final PostStatMapper postStatMapper;
     private final PostLikeMapper postLikeMapper;
+    private final PostCommentMapper postCommentMapper;
 
     public PostManager(PostMapper postMapper,
                        PostImageMapper postImageMapper,
                        PostStatMapper postStatMapper,
-                       PostLikeMapper postLikeMapper) {
+                       PostLikeMapper postLikeMapper,
+                       PostCommentMapper postCommentMapper) {
         this.postMapper = postMapper;
         this.postImageMapper = postImageMapper;
         this.postStatMapper = postStatMapper;
         this.postLikeMapper = postLikeMapper;
+        this.postCommentMapper = postCommentMapper;
     }
 
     /**
+     * 新建一个帖子
+     *
      * 1.创建PostEntity赋值
      * 2.在帖子存在多张图片的时候，遍历图片给PostImageEntity赋值
      * 3.创建PostStatEntity并初始化点赞评论
@@ -45,7 +44,6 @@ public class PostManager {
      * @param content
      * @param imageKeys
      */
-
     public void createPost(Long postId, Long userId, String content, List<String> imageKeys) {
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -77,7 +75,8 @@ public class PostManager {
     }
 
     /**
-     * 查看帖子
+     * 根据postId查看一个帖子
+     *
      * 条件：根据帖子ID搜索，帖子状态正常并且未被删除
      * @param postId
      * @return
@@ -93,6 +92,8 @@ public class PostManager {
     }
 
     /**
+     * 查看一个帖子里面的图片信息
+     *
      * 根据帖子ID查询该帖子的iamges列表，并按SortOrder排序返回
      * @param postId
      * @return
@@ -106,6 +107,8 @@ public class PostManager {
     }
 
     /**
+     * 查询总计表
+     *
      * 查询点赞，评论...
      * @param postId
      * @return
@@ -116,7 +119,10 @@ public class PostManager {
 
 
     /**
-     * 逻辑删除，实际上是updata,返回是0或1（影响的数据库数据条数）
+     * 删除一个帖子
+     *
+     * 逻辑删除，实际上是updata修改status帖子状态
+     * 返回是0或1（影响的数据库数据条数）
      * @param postId
      * @param userId
      * @return
@@ -133,10 +139,23 @@ public class PostManager {
         return postMapper.update(null, wrapper);
     }
 
+    /**
+     * 查看帖子状态是否正常
+     *
+     * @param postId
+     * @return
+     */
     public boolean existsNormalPost(Long postId) {
         return findNormalPostByPostId(postId).isPresent();
     }
 
+    /**
+     * 根据用户id和帖子id判断用户是否点赞
+     *
+     * @param userId
+     * @param postId
+     * @return
+     */
     public Optional<PostLikeEntity> findLikeByUserIdAndPostId(Long userId, Long postId) {
         LambdaQueryWrapper<PostLikeEntity> wrapper = new LambdaQueryWrapper<PostLikeEntity>()
                 .eq(PostLikeEntity::getUserId, userId)
@@ -167,5 +186,96 @@ public class PostManager {
                 .set(PostStatEntity::getUpdatedAt, OffsetDateTime.now());
 
         return postStatMapper.update(null, wrapper);
+    }
+
+    /**
+     * 新建评论
+     * 将评论实体插入数据库
+     * @param comment
+     */
+    public void createComment(PostCommentEntity comment){
+        postCommentMapper.insert(comment);
+    }
+
+    /**
+     * 分页查询一级评论
+     * @param postId
+     * @param cursorCommentId 当前评论limit里面最后一条的游标
+     * @param limit
+     * @return
+     */
+    public List<PostCommentEntity> listRootCommentsByPostId(Long postId, Long cursorCommentId, int limit) {
+        LambdaQueryWrapper<PostCommentEntity> wrapper = new LambdaQueryWrapper<PostCommentEntity>()
+                .eq(PostCommentEntity::getPostId, postId)
+                .eq(PostCommentEntity::getRootId, 0L)
+                .eq(PostCommentEntity::getDeleted, 0)
+                .eq(PostCommentEntity::getStatus, 1)
+                .orderByDesc(PostCommentEntity::getCommentId)
+                .last("LIMIT " + limit);
+
+        if (cursorCommentId != null && cursorCommentId > 0) {
+            wrapper.lt(PostCommentEntity::getCommentId, cursorCommentId);
+        }
+
+        return postCommentMapper.selectList(wrapper);
+    }
+
+    /**
+     * 更新评论数量
+     * GREATSET保证评论数量不会小于0
+     * @param postId
+     * @param delta
+     * @return
+     */
+    public int increaseCommentCount(Long postId, int delta){
+        LambdaUpdateWrapper<PostStatEntity> wrapper = new LambdaUpdateWrapper<PostStatEntity>()
+                .eq(PostStatEntity::getPostId, postId)
+                .setSql("comment_count = GREATEST(comment_count + (" + delta + "), 0)")
+                .set(PostStatEntity::getUpdatedAt, OffsetDateTime.now());
+
+        return postStatMapper.update(null, wrapper);
+    }
+
+    /**
+     * 查询多条帖子
+     *
+     * 根据postId来查（最新的帖子在最前面）
+     * @param userId
+     * @param cursorPostId
+     * @param limit
+     * @return
+     */
+    public List<PostEntity> listNormalPostsByUserId(Long userId, Long cursorPostId, int limit) {
+        LambdaQueryWrapper<PostEntity> wrapper = new LambdaQueryWrapper<PostEntity>()
+                .eq(PostEntity::getUserId, userId)
+                .eq(PostEntity::getStatus, 1)
+                .eq(PostEntity::getDeleted, 0)
+                .orderByDesc(PostEntity::getPostId)
+                .last("LIMIT " + limit);
+
+        if (cursorPostId != null && cursorPostId > 0) {
+            wrapper.lt(PostEntity::getPostId, cursorPostId);
+        }
+
+        return postMapper.selectList(wrapper);
+    }
+
+    /**
+     * 查询帖子列表
+     *
+     * 查询{since}天内的limit条数据
+     * @param since
+     * @param limit
+     * @return
+     */
+    public List<PostEntity> listRecentNormalPosts(OffsetDateTime since, int limit) {
+        LambdaQueryWrapper<PostEntity> wrapper = new LambdaQueryWrapper<PostEntity>()
+                .eq(PostEntity::getStatus, 1)
+                .eq(PostEntity::getDeleted, 0)
+                .ge(PostEntity::getCreatedAt, since)
+                .orderByDesc(PostEntity::getPostId)
+                .last("LIMIT " + limit);
+
+        return postMapper.selectList(wrapper);
     }
 }

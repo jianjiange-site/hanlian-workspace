@@ -1,7 +1,9 @@
 package com.jianjiange.dating.post.service;
 
 import com.jianjiange.dating.post.config.SnowflakeIdGenerator;
+import com.jianjiange.dating.post.exception.BusinessException;
 import com.jianjiange.dating.post.manager.PostManager;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -13,10 +15,14 @@ public class PostWriteService {
 
     private final PostManager postManager;
     private final SnowflakeIdGenerator idGenerator;
+    private final FeedRedisService feedRedisService;
 
-    public PostWriteService(PostManager postManager, SnowflakeIdGenerator idGenerator) {
+    public PostWriteService(PostManager postManager,
+                            SnowflakeIdGenerator idGenerator,
+                            FeedRedisService feedRedisService) {
         this.postManager = postManager;
         this.idGenerator = idGenerator;
+        this.feedRedisService = feedRedisService;
     }
 
     /**
@@ -46,6 +52,7 @@ public class PostWriteService {
 
         Long postId = idGenerator.nextId();
         postManager.createPost(postId, userId, content, imageKeys);
+        feedRedisService.addToColdStartPool(postId, userId);
         return postId;
     }
 
@@ -66,8 +73,10 @@ public class PostWriteService {
 
         int updated = postManager.markPostDeleted(postId, userId);
         if (updated == 0) {
-            throw new IllegalArgumentException("post not found or no permission");
+            throw new BusinessException(HttpStatus.FORBIDDEN, "帖子不存在或没有操作权限");
         }
+
+        feedRedisService.removePostFromFeedPools(postId);
 
         return true;
     }

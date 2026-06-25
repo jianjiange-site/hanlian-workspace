@@ -1,0 +1,669 @@
+{
+  "info": {
+    "name": "post-service debug",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Local debug collection for post-service. Import this file into Postman and run the endpoints against http://localhost:18084."
+  },
+  "item": [
+    {
+      "name": "Create Post",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 10001,\n  \"content\": \"my first post-service post\",\n  \"imageKeys\": [\n    \"post-image/10001/1.jpg\"\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts"
+          ]
+        },
+        "description": "Create a post for local testing."
+      }
+    },
+    {
+      "name": "Get Post Detail",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "description": "Get post detail for local testing."
+      }
+    },
+    {
+      "name": "Delete Post",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}?userId={{userId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            }
+          ]
+        },
+        "description": "Delete a post for local testing. This is a logical delete: posts.deleted=1 and posts.status=0."
+      }
+    },
+    {
+      "name": "Like Post",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}/like?userId={{userId}}&liked=true",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "liked",
+              "value": "true"
+            }
+          ]
+        },
+        "description": "Like a post. Repeated likes are idempotent and will not increase likeCount again."
+      }
+    },
+    {
+      "name": "Unlike Post",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}/like?userId={{userId}}&liked=false",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}",
+            "like"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "liked",
+              "value": "false"
+            }
+          ]
+        },
+        "description": "Cancel like for a post. Repeated unlikes are idempotent and will not decrease likeCount again."
+      }
+    },
+    {
+      "name": "Create Comment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"this is my first comment\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}/comments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}",
+            "comments"
+          ]
+        },
+        "description": "Create a root comment for a post. The path postId is used as the target post."
+      }
+    },
+    {
+      "name": "List Comments",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/{{postId}}/comments?userId={{userId}}&pageSize=20&cursor=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "{{postId}}",
+            "comments"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "pageSize",
+              "value": "20"
+            },
+            {
+              "key": "cursor",
+              "value": "0"
+            }
+          ]
+        },
+        "description": "List root comments for a post. Use nextCursorCommentId as cursor for the next page."
+      }
+    },
+    {
+      "name": "List User Posts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/user/{{userId}}?viewerUserId={{userId}}&pageSize=20&cursor=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "user",
+            "{{userId}}"
+          ],
+          "query": [
+            {
+              "key": "viewerUserId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "pageSize",
+              "value": "20"
+            },
+            {
+              "key": "cursor",
+              "value": "0"
+            }
+          ]
+        },
+        "description": "List normal posts created by a user. viewerUserId controls likedByMe in each returned post."
+      }
+    },
+    {
+      "name": "Get Recommend Feed",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/debug/posts/feed?userId={{userId}}&pageSize=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "debug",
+            "posts",
+            "feed"
+          ],
+          "query": [
+            {
+              "key": "userId",
+              "value": "{{userId}}"
+            },
+            {
+              "key": "pageSize",
+              "value": "10"
+            }
+          ]
+        },
+        "description": "Read recommend feed from recommend pool and cold-start pool. Response contains posts, nextCursorPostId and hasMore."
+      }
+    },
+    {
+      "name": "Exception Tests",
+      "item": [
+        {
+          "name": "Get Missing Post - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"帖子不存在\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/{{missingPostId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "{{missingPostId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Expect 404 and Chinese error message when the post does not exist."
+          }
+        },
+        {
+          "name": "Like Missing Post - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"帖子不存在\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/{{missingPostId}}/like?userId={{userId}}&liked=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "{{missingPostId}}",
+                "like"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "liked",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Expect 404 and Chinese error message when liking a missing post."
+          }
+        },
+        {
+          "name": "Comment Missing Post - 404",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 404\", function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"帖子不存在\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"comment to missing post\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/{{missingPostId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "{{missingPostId}}",
+                "comments"
+              ]
+            },
+            "description": "Expect 404 and Chinese error message when commenting on a missing post."
+          }
+        },
+        {
+          "name": "Delete Missing Or Forbidden Post - 403",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 403\", function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"帖子不存在或没有操作权限\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/{{missingPostId}}?userId={{userId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "{{missingPostId}}"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                }
+              ]
+            },
+            "description": "Expect 403 when the post is missing or the user has no delete permission."
+          }
+        },
+        {
+          "name": "Create Post Empty Content - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"内容不能为空\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"\",\n  \"imageKeys\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts"
+              ]
+            },
+            "description": "Expect 400 and Chinese error message when content is empty."
+          }
+        },
+        {
+          "name": "Create Post Too Many Images - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"图片数量不能超过9张\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"too many images\",\n  \"imageKeys\": [\n    \"1.jpg\",\n    \"2.jpg\",\n    \"3.jpg\",\n    \"4.jpg\",\n    \"5.jpg\",\n    \"6.jpg\",\n    \"7.jpg\",\n    \"8.jpg\",\n    \"9.jpg\",\n    \"10.jpg\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts"
+              ]
+            },
+            "description": "Expect 400 and Chinese error message when image count is greater than 9."
+          }
+        },
+        {
+          "name": "Create Comment Empty Content - 400",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 400\", function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test(\"message is Chinese\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.success).to.eql(false);",
+                  "    pm.expect(json.message).to.eql(\"内容不能为空\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}},\n  \"content\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/{{postId}}/comments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "{{postId}}",
+                "comments"
+              ]
+            },
+            "description": "Expect 400 and Chinese error message when comment content is empty."
+          }
+        },
+        {
+          "name": "Get Recommend Feed Response Shape",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"status is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"feed response has pagination fields\", function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property(\"posts\");",
+                  "    pm.expect(json).to.have.property(\"nextCursorPostId\");",
+                  "    pm.expect(json).to.have.property(\"hasMore\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/debug/posts/feed?userId={{userId}}&pageSize=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "debug",
+                "posts",
+                "feed"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{userId}}"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Verify feed response contains posts, nextCursorPostId and hasMore."
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:18084"
+    },
+    {
+      "key": "userId",
+      "value": "10001"
+    },
+    {
+      "key": "postId",
+      "value": "7297833297494016"
+    },
+    {
+      "key": "missingPostId",
+      "value": "9999999999999999"
+    }
+  ]
+}

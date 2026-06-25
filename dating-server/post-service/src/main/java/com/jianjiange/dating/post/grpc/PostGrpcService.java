@@ -20,12 +20,16 @@ import com.dating.hanlian.proto.post.v1.PingRequest;
 import com.dating.hanlian.proto.post.v1.PingResponse;
 import com.dating.hanlian.proto.post.v1.Post;
 import com.dating.hanlian.proto.post.v1.PostServiceGrpc;
-import io.grpc.stub.StreamObserver;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
+import com.jianjiange.dating.post.service.FeedService;
+import com.jianjiange.dating.post.service.PostCommentService;
 import com.jianjiange.dating.post.service.PostLikeService;
 import com.jianjiange.dating.post.service.PostReadService;
 import com.jianjiange.dating.post.service.PostWriteService;
+import io.grpc.stub.StreamObserver;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -34,110 +38,181 @@ public class PostGrpcService extends PostServiceGrpc.PostServiceImplBase {
     private final PostWriteService postWriteService;
     private final PostReadService postReadService;
     private final PostLikeService postLikeService;
+    private final PostCommentService postCommentService;
+    private final FeedService feedService;
 
     @Override
     public void ping(PingRequest request, StreamObserver<PingResponse> responseObserver) {
-        PingResponse response = PingResponse.newBuilder()
-                .setMessage("post-service pong: " + request.getMessage())
-                .build();
+        try {
+            PingResponse response = PingResponse.newBuilder()
+                    .setMessage("post-service pong: " + request.getMessage())
+                    .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
 
     @Override
     public void createPost(CreatePostRequest request, StreamObserver<CreatePostResponse> responseObserver) {
-        Long postId = postWriteService.createPost(
-                request.getUserId(),
-                request.getContent(),
-                request.getImageKeysList()
-        );
+        try {
+            Long postId = postWriteService.createPost(
+                    request.getUserId(),
+                    request.getContent(),
+                    request.getImageKeysList()
+            );
 
-        CreatePostResponse response = CreatePostResponse.newBuilder()
-                .setPostId(postId)
-                .build();
+            CreatePostResponse response = CreatePostResponse.newBuilder()
+                    .setPostId(postId)
+                    .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void deletePost(DeletePostRequest request, StreamObserver<DeletePostResponse> responseObserver) {
-        boolean success = postWriteService.deletePost(request.getUserId(), request.getPostId());
-        DeletePostResponse response = DeletePostResponse.newBuilder()
-                .setSuccess(success)
-                .build();
+        try {
+            boolean success = postWriteService.deletePost(request.getUserId(), request.getPostId());
+            DeletePostResponse response = DeletePostResponse.newBuilder()
+                    .setSuccess(success)
+                    .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void getPostDetail(GetPostDetailRequest request, StreamObserver<GetPostDetailResponse> responseObserver) {
-        Post post = postReadService.getPostDetail(request.getUserId(), request.getPostId());
-        GetPostDetailResponse response = GetPostDetailResponse.newBuilder()
-                .setPost(post)
-                .build();
+        try {
+            Post post = postReadService.getPostDetail(request.getUserId(), request.getPostId());
+            GetPostDetailResponse response = GetPostDetailResponse.newBuilder()
+                    .setPost(post)
+                    .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void listUserPosts(ListUserPostsRequest request, StreamObserver<ListUserPostsResponse> responseObserver) {
-        ListUserPostsResponse response = ListUserPostsResponse.newBuilder()
-                .setHasMore(false)
-                .build();
+        try {
+            PostReadService.ListUserPostsResult result = postReadService.listUserPosts(
+                    request.getViewerUserId(),
+                    request.getTargetUserId(),
+                    request.getCursorPostId(),
+                    request.getPageSize()
+            );
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            ListUserPostsResponse response = ListUserPostsResponse.newBuilder()
+                    .addAllPosts(result.posts())
+                    .setNextCursorPostId(result.nextCursorPostId())
+                    .setHasMore(result.hasMore())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void likePost(LikePostRequest request, StreamObserver<LikePostResponse> responseObserver) {
-        PostLikeService.LikePostResult result = postLikeService.likePost(
-                request.getUserId(),
-                request.getPostId(),
-                request.getLiked()
-        );
+        try {
+            PostLikeService.LikePostResult result = postLikeService.likePost(
+                    request.getUserId(),
+                    request.getPostId(),
+                    request.getLiked()
+            );
 
-        LikePostResponse response = LikePostResponse.newBuilder()
-                .setSuccess(result.success())
-                .setLiked(result.liked())
-                .setLikeCount(result.likeCount())
-                .build();
+            LikePostResponse response = LikePostResponse.newBuilder()
+                    .setSuccess(result.success())
+                    .setLiked(result.liked())
+                    .setLikeCount(result.likeCount())
+                    .build();
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void createComment(CreateCommentRequest request, StreamObserver<CreateCommentResponse> responseObserver) {
-        CreateCommentResponse response = CreateCommentResponse.newBuilder()
-                .setCommentId(0L)
-                .setCommentCount(0)
-                .build();
+        try {
+            PostCommentService.CreateCommentResult result = postCommentService.createComment(
+                    request.getUserId(),
+                    request.getPostId(),
+                    request.getContent()
+            );
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            CreateCommentResponse response = CreateCommentResponse.newBuilder()
+                    .setCommentId(result.commentId())
+                    .setCommentCount(result.commentCount())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void listComments(ListCommentsRequest request, StreamObserver<ListCommentsResponse> responseObserver) {
-        ListCommentsResponse response = ListCommentsResponse.newBuilder()
-                .setHasMore(false)
-                .build();
+        try {
+            PostCommentService.ListCommentsResult result = postCommentService.listComments(
+                    request.getUserId(),
+                    request.getPostId(),
+                    request.getCursorCommentId(),
+                    request.getPageSize()
+            );
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            ListCommentsResponse response = ListCommentsResponse.newBuilder()
+                    .addAllComments(result.comments())
+                    .setNextCursorCommentId(result.nextCursorCommentId())
+                    .setHasMore(result.hasMore())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 
     @Override
     public void getRecommendFeed(GetRecommendFeedRequest request, StreamObserver<GetRecommendFeedResponse> responseObserver) {
-        GetRecommendFeedResponse response = GetRecommendFeedResponse.newBuilder().build();
+        try {
+            FeedService.RecommendFeedResult result = feedService.getRecommendFeed(
+                    request.getUserId(),
+                    request.getPageSize()
+            );
 
-        responseObserver.onNext(response);
-        responseObserver.onCompleted();
+            GetRecommendFeedResponse response = GetRecommendFeedResponse.newBuilder()
+                    .addAllPosts(result.posts())
+                    .setNextCursorPostId(result.nextCursorPostId())
+                    .setHasMore(result.hasMore())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            GrpcExceptionHandler.handle(e, responseObserver);
+        }
     }
 }
