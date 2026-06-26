@@ -6,8 +6,10 @@ option java_multiple_files = true;
 option java_package = "com.dating.hanlian.proto.user.v1";
 option java_outer_classname = "UserProto";
 
+// 保留旧 Ping，避免现在 user-service 里的 Ping 骨架立刻编译失败。
+// 等真实业务 RPC 都接好后，再考虑删除这个临时服务。
 service UserService {
-  rpc Ping (PingRequest) returns (PingResponse);
+  rpc Ping(PingRequest) returns (PingResponse);
 }
 
 message PingRequest {
@@ -16,4 +18,94 @@ message PingRequest {
 
 message PingResponse {
   string message = 1;
+}
+
+// 用户身份服务：负责“根据登录凭证解析或创建 userId”。
+// 注意：它不负责短信校验、不签 JWT，这些是 mobile-gateway 的职责。
+service UserIdentityService {
+  rpc ResolveOrCreateByPhone(ResolveOrCreateByPhoneRequest)
+      returns (ResolveOrCreateResponse);
+
+  rpc ResolveOrCreateByDevice(ResolveOrCreateByDeviceRequest)
+      returns (ResolveOrCreateResponse);
+
+  rpc ResolveOrCreateByThirdParty(ResolveOrCreateByThirdPartyRequest)
+      returns (ResolveOrCreateResponse);
+
+  rpc CheckBan(CheckBanRequest) returns (CheckBanResponse);
+}
+
+message ResolveOrCreateByPhoneRequest {
+  // 已经由 mobile-gateway 验证过的手机号，格式建议为 E.164，例如 +8613800138000。
+  string phone_e164 = 1;
+
+  // App 名称，例如 hanlian。
+  string app_name = 2;
+}
+
+message ResolveOrCreateByDeviceRequest {
+  // 客户端设备标识。注意它不是绝对稳定身份，只用于快速登录 MVP。
+  string device_id = 1;
+
+  // 设备平台。
+  Platform platform = 2;
+
+  // App 名称，例如 hanlian。
+  string app_name = 3;
+}
+
+message ResolveOrCreateByThirdPartyRequest {
+  // 第三方平台。
+  ThirdPartyPlatform platform = 1;
+
+  // 第三方平台返回的用户唯一 ID。
+  string third_party_user_id = 2;
+
+  // App 名称，例如 hanlian。
+  string app_name = 3;
+
+  // 可选字段：例如 Google 登录时返回的 email。
+  string email = 4;
+}
+
+message ResolveOrCreateResponse {
+  // user-service 内部生成的用户 ID。
+  int64 user_id = 1;
+
+  // true 表示刚创建或资料未补全，需要进入 onboarding。
+  bool pending = 2;
+
+  // true 表示这次调用创建了新用户；false 表示命中已有绑定。
+  bool created = 3;
+}
+
+message CheckBanRequest {
+  int64 user_id = 1;
+}
+
+message CheckBanResponse {
+  bool banned = 1;
+
+  // 机器可读原因，例如 USER_BANNED / USER_SUSPENDED / OPERATIONAL_BANNED。
+  string reason = 2;
+
+  // 封禁时间，毫秒时间戳；没有封禁时为 0。
+  int64 banned_at_ms = 3;
+
+  // 给 gateway 或客户端展示层使用的提示文案。
+  string message = 4;
+}
+
+enum Platform {
+  PLATFORM_UNSPECIFIED = 0;
+  PLATFORM_IOS = 1;
+  PLATFORM_ANDROID = 2;
+  PLATFORM_WEB = 3;
+}
+
+enum ThirdPartyPlatform {
+  THIRD_PARTY_PLATFORM_UNSPECIFIED = 0;
+  THIRD_PARTY_PLATFORM_GOOGLE = 1;
+  THIRD_PARTY_PLATFORM_APPLE = 2;
+  THIRD_PARTY_PLATFORM_WECHAT = 3;
 }

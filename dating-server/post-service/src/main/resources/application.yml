@@ -39,3 +39,8 @@ app:
   cache:
     key-prefix: ${REDIS_KEY_PREFIX:hanlian}
     stat-delta-ttl: 1d
+
+aurora:
+  id:
+    datacenter-id: 1
+    worker-id: 2

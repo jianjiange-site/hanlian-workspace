@@ -1,7 +1,7 @@
 package com.aurora.dating.post.service;
 
+import com.aurora.dating.common.id.SnowflakeIdGenerator;
 import com.dating.hanlian.proto.post.v1.Comment;
-import com.aurora.dating.post.config.SnowflakeIdGenerator;
 import com.aurora.dating.post.entity.PostCommentEntity;
 import com.aurora.dating.post.entity.PostStatEntity;
 import com.aurora.dating.post.exception.BusinessException;

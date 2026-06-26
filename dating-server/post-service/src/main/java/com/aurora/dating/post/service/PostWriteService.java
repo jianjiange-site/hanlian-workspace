@@ -1,6 +1,6 @@
 package com.aurora.dating.post.service;
 
-import com.aurora.dating.post.config.SnowflakeIdGenerator;
+import com.aurora.dating.common.id.SnowflakeIdGenerator;
 import com.aurora.dating.post.exception.BusinessException;
 import com.aurora.dating.post.manager.PostManager;
 import org.springframework.http.HttpStatus;

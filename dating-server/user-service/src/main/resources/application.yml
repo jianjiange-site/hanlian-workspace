@@ -29,3 +29,8 @@ management:
 grpc:
   server:
     port: 19081
+
+aurora:
+  id:
+    datacenter-id: 1
+    worker-id: 1

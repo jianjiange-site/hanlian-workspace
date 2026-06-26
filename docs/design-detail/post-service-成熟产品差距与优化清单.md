@@ -470,6 +470,80 @@ SELECT count(*) FROM post_comments WHERE post_id = ? AND status = 1 AND deleted 
 
 ---
 
+### 3.5 事务范围还可以继续缩小
+
+当前实现：
+
+- `PostWriteService.createPost` 使用 `@Transactional`。
+- `PostWriteService.deletePost` 使用 `@Transactional`。
+- `PostLikeService.likePost` 使用 `@Transactional`。
+- `PostCommentService.createComment` 使用 `@Transactional`。
+
+这些事务保证了数据库写入的一致性，是正确方向。但当前有些方法里，事务内除了数据库操作，还包含了一些可以放到事务外的动作。
+
+典型例子：
+
+```text
+createPost
+  -> 写 posts / post_images / post_stats
+  -> 写 Redis 冷启动池
+
+deletePost
+  -> 逻辑删除 posts
+  -> 清理 Redis Feed 池
+
+likePost
+  -> 写 post_likes
+  -> 写 Redis 计数增量
+  -> 查询 post_stats + Redis delta 返回计数
+```
+
+不足：
+
+- Redis 操作不属于数据库事务，放在事务内部也不能和 PG 一起回滚。
+- 事务范围越大，数据库连接占用时间越长。
+- 如果事务里混入远程调用、Redis 调用、复杂计算，后续高并发时更容易放大性能问题。
+- 如果事务提交失败但 Redis 已经写入，可能出现短暂不一致。
+
+成熟产品更常见的做法：
+
+```text
+事务内：
+只做必须保持一致的数据库写入
+
+事务外：
+Redis 缓存、Feed 池、通知、日志事件、异步任务
+```
+
+后续优化方向：
+
+1. 把“数据库核心写入”和“事务后副作用”拆开。
+2. 使用 Spring 的事务提交后回调：
+
+```java
+TransactionSynchronizationManager.registerSynchronization(...)
+```
+
+或者使用事件：
+
+```text
+ApplicationEventPublisher
+@TransactionalEventListener(phase = AFTER_COMMIT)
+```
+
+3. 发帖成功提交后，再写冷启动池。
+4. 删除成功提交后，再清理 Feed 池。
+5. 点赞 / 评论明细提交后，再写 Redis 计数增量。
+
+需要注意：
+
+- 第一版为了好理解，把逻辑写在一个 service 方法里可以接受。
+- 后续优化时，不要一上来大改，建议先从 `createPost` 和 `deletePost` 这种链路简单的接口开始拆。
+
+优先级：P1。
+
+---
+
 ## 4. 性能与扩展性差距
 
 ### 4.1 Feed 详情组装存在多次 DB 查询
@@ -563,6 +637,29 @@ PostCommentManager
 - 用户帖子列表
 - Feed 列表
 
+当前代码里比较典型的重复模式：
+
+```text
+int size = pageSize <= 0 ? 默认值 : Math.min(pageSize, 最大值);
+int queryLimit = size + 1;
+
+List<?> rows = manager.listXXX(..., queryLimit);
+
+boolean hasMore = rows.size() > size;
+if (hasMore) {
+    rows = rows.subList(0, size);
+}
+
+long nextCursor = rows.isEmpty() ? 0L : rows.get(rows.size() - 1).getId();
+```
+
+不足：
+
+- 每个列表接口都要重复写一遍。
+- 默认页大小、最大页大小分散在各个 service。
+- 后续如果分页规则调整，容易漏改。
+- 初学阶段重复代码容易看懂，但接口变多后维护成本会上升。
+
 成熟产品会抽：
 
 ```text
@@ -572,7 +669,36 @@ PageSizeLimiter
 
 后续优化：
 
-先不要过早抽象。等分页接口更多、更稳定时再抽。
+建议分两步做。
+
+第一步：只抽返回结果，不抽查询逻辑。
+
+```java
+public record CursorPageResult<T>(
+        List<T> records,
+        long nextCursor,
+        boolean hasMore
+) {
+}
+```
+
+第二步：再抽分页工具方法。
+
+```java
+public final class CursorPageUtils {
+    public static int normalizePageSize(int pageSize, int defaultSize, int maxSize) {
+        return pageSize <= 0 ? defaultSize : Math.min(pageSize, maxSize);
+    }
+}
+```
+
+暂时不建议一开始就封装成很复杂的通用分页框架，因为评论游标是 `commentId`，用户帖子游标是 `postId`，Feed 的游标语义又不完全一样。
+
+推荐策略：
+
+- 当前接口数量少时，可以先保留重复，方便学习和调试。
+- 当分页接口超过 4 到 5 个，或者同一段逻辑复制第三次以上时，再抽工具。
+- 抽象目标是减少重复，不是为了“看起来高级”。
 
 优先级：P3。
 
@@ -1006,6 +1132,7 @@ Properties Encoding = UTF-8
 6. 接真实 UserClient。
 7. 发帖 / 评论 Redis 限流。
 8. FeedService 收窄异常捕获范围。
+9. 缩小事务范围，把 Redis / Feed 池副作用放到事务提交后。
 
 ### 8.2 再做 P2
 
@@ -1019,6 +1146,7 @@ Properties Encoding = UTF-8
 6. ErrorCode 枚举。
 7. 配置参数集中化。
 8. 敏感词和图片审核。
+9. 简单封装分页返回结构和 pageSize 规则。
 
 ### 8.3 最后做 P3
 
@@ -1075,4 +1203,3 @@ Properties Encoding = UTF-8
 ```text
 先可靠性，再性能，再产品体验，最后做结构重构。
 ```
-

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 public class UserGrpcServerLifecycle implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(UserGrpcServerLifecycle.class);
+    private final UserIdentityGrpcService userIdentityGrpcService;
 
     private final UserGrpcService userGrpcService;
     private final int port;
@@ -21,9 +22,11 @@ public class UserGrpcServerLifecycle implements SmartLifecycle {
 
     public UserGrpcServerLifecycle(
             UserGrpcService userGrpcService,
-            @Value("${grpc.server.port:19081}") int port) {
+            UserIdentityGrpcService userIdentityGrpcService,
+            @Value("${grpc.server.port:19081}") int grpcPort) {
         this.userGrpcService = userGrpcService;
-        this.port = port;
+        this.userIdentityGrpcService = userIdentityGrpcService;
+        this.port = grpcPort;
     }
 
     /**
@@ -42,6 +45,7 @@ public class UserGrpcServerLifecycle implements SmartLifecycle {
             // 1. Bind the generated UserService contract implementation to a dedicated gRPC port.
             server = ServerBuilder.forPort(port)
                     .addService(userGrpcService)
+                    .addService(userIdentityGrpcService)
                     .build()
                     .start();
 

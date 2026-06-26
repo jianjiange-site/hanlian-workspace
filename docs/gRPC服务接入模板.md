@@ -175,12 +175,12 @@ grpc:
 
 端口建议：
 
-| 服务 | HTTP | gRPC |
-|---|---:|---:|
-| user-service | 18081 | 19081 |
-| im-service | 18082 | 19082 |
-| match-service | 18083 | 19083 |
-| post-service | 18084 | 19084 |
+| 服务              | HTTP  | gRPC  |
+| --------------- | -----:| -----:|
+| user-service    | 18081 | 19081 |
+| im-service      | 18082 | 19082 |
+| match-service   | 18083 | 19083 |
+| post-service    | 18084 | 19084 |
 | payment-service | 18085 | 19085 |
 
 ### 5.3 gRPC Service
@@ -505,13 +505,13 @@ GET /internal/check/payment-grpc
 
 对应端口：
 
-| 链路 | 服务端 gRPC |
-|---|---:|
-| mobile-gateway -> user-service | 19081 |
-| mobile-gateway -> im-service | 19082 |
-| mobile-gateway -> match-service | 19083 |
-| mobile-gateway -> post-service | 19084 |
-| mobile-gateway -> payment-service | 19085 |
+| 链路                                | 服务端 gRPC |
+| --------------------------------- | --------:|
+| mobile-gateway -> user-service    | 19081    |
+| mobile-gateway -> im-service      | 19082    |
+| mobile-gateway -> match-service   | 19083    |
+| mobile-gateway -> post-service    | 19084    |
+| mobile-gateway -> payment-service | 19085    |
 
 ---
 
