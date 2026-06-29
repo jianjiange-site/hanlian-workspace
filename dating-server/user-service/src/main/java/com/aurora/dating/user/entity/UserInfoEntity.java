@@ -17,21 +17,43 @@ public class UserInfoEntity {
     private Long id;
 
     private Long userId;
+
     private String appName;
+
     private Boolean pending;
+
     private String nickname;
+
     private Integer gender;
+
     private Integer age;
+
     private LocalDate birthday;
+
     private String bio;
+
     private String preferredLocation;
+
     private String profession;
+
     private String education;
+
     private Integer height;
+
     private String customAvatar;
+
+    /**
+     * 0 - 正常              checkban是否封禁：false
+     * 2 - 封禁banned        checkban是否封禁：true
+     * 5 - 暂停 / 临时封禁     checkban是否封禁：true
+     */
     private Integer regulationStatus;
+
     private OffsetDateTime lastOpenAt;
+
     private OffsetDateTime createdAt;
+
     private OffsetDateTime updatedAt;
+
     private Boolean deleted;
 }

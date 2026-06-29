@@ -1,6 +1,8 @@
 package com.aurora.dating.gateway.client;
 
 import com.dating.hanlian.proto.user.v1.UserServiceGrpc;
+import com.dating.hanlian.proto.user.v1.UserIdentityServiceGrpc;
+import com.dating.hanlian.proto.user.v1.UserProfileServiceGrpc;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -35,7 +37,25 @@ public class UserGrpcClientConfig {
      */
     @Bean
     public UserServiceGrpc.UserServiceBlockingStub userServiceBlockingStub(
-            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel) {
-        return UserServiceGrpc.newBlockingStub(userServiceManagedChannel);
+            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel,
+            UserGrpcClientMetadataInterceptor userGrpcClientMetadataInterceptor) {
+        return UserServiceGrpc.newBlockingStub(userServiceManagedChannel)
+                .withInterceptors(userGrpcClientMetadataInterceptor);
+    }
+
+    @Bean
+    public UserIdentityServiceGrpc.UserIdentityServiceBlockingStub userIdentityServiceBlockingStub(
+            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel,
+            UserGrpcClientMetadataInterceptor userGrpcClientMetadataInterceptor) {
+        return UserIdentityServiceGrpc.newBlockingStub(userServiceManagedChannel)
+                .withInterceptors(userGrpcClientMetadataInterceptor);
+    }
+
+    @Bean
+    public UserProfileServiceGrpc.UserProfileServiceBlockingStub userProfileServiceBlockingStub(
+            @Qualifier("userServiceManagedChannel") ManagedChannel userServiceManagedChannel,
+            UserGrpcClientMetadataInterceptor userGrpcClientMetadataInterceptor) {
+        return UserProfileServiceGrpc.newBlockingStub(userServiceManagedChannel)
+                .withInterceptors(userGrpcClientMetadataInterceptor);
     }
 }

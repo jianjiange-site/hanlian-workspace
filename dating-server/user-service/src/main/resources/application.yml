@@ -30,6 +30,12 @@ grpc:
   server:
     port: 19081
 
+app:
+  cache:
+    key-prefix: ${REDIS_KEY_PREFIX:hanlian}
+    ban-status-ttl: 5m
+    profile-ttl: 24h
+
 aurora:
   id:
     datacenter-id: 1

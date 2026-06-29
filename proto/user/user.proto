@@ -32,7 +32,24 @@ service UserIdentityService {
   rpc ResolveOrCreateByThirdParty(ResolveOrCreateByThirdPartyRequest)
       returns (ResolveOrCreateResponse);
 
+  rpc BindPhone(BindPhoneRequest) returns (BindAccountResponse);
+
+  rpc BindThirdParty(BindThirdPartyRequest) returns (BindAccountResponse);
+
   rpc CheckBan(CheckBanRequest) returns (CheckBanResponse);
+}
+
+service UserProfileService {
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc BatchGetProfile(BatchGetProfileRequest) returns (BatchGetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc UpsertOnboarding(UpsertOnboardingRequest) returns (UpsertOnboardingResponse);
+  rpc PresignAvatarUpload(PresignAvatarUploadRequest) returns (PresignAvatarUploadResponse);
+  rpc ConfirmAvatarUpload(ConfirmAvatarUploadRequest) returns (ConfirmAvatarUploadResponse);
+  rpc GetUserInterests(GetUserInterestsRequest) returns (GetUserInterestsResponse);
+  rpc ReplaceUserInterests(ReplaceUserInterestsRequest) returns (ReplaceUserInterestsResponse);
+  rpc UpdateRegulationStatus(UpdateRegulationStatusRequest) returns (UpdateRegulationStatusResponse);
+  rpc ListRegulationLogs(ListRegulationLogsRequest) returns (ListRegulationLogsResponse);
 }
 
 message ResolveOrCreateByPhoneRequest {
@@ -79,6 +96,24 @@ message ResolveOrCreateResponse {
   bool created = 3;
 }
 
+message BindPhoneRequest {
+  int64 user_id = 1;
+  string phone_e164 = 2;
+  string app_name = 3;
+}
+
+message BindThirdPartyRequest {
+  int64 user_id = 1;
+  ThirdPartyPlatform platform = 2;
+  string third_party_user_id = 3;
+  string app_name = 4;
+  string email = 5;
+}
+
+message BindAccountResponse {
+  int64 user_id = 1;
+}
+
 message CheckBanRequest {
   int64 user_id = 1;
 }
@@ -94,6 +129,167 @@ message CheckBanResponse {
 
   // 给 gateway 或客户端展示层使用的提示文案。
   string message = 4;
+}
+
+message GetProfileRequest {
+  int64 user_id = 1;
+}
+
+message GetProfileResponse {
+  UserProfile profile = 1;
+}
+
+message BatchGetProfileRequest {
+  repeated int64 user_ids = 1;
+}
+
+message BatchGetProfileResponse {
+  repeated UserProfile profiles = 1;
+}
+
+message UpdateProfileRequest {
+  int64 user_id = 1;
+  string nickname = 2;
+  int32 age = 3;
+  string bio = 4;
+  string location = 5;
+  string occupation = 6;
+  string education = 7;
+  int32 height = 8;
+}
+
+message UpdateProfileResponse {
+  UserProfile profile = 1;
+}
+
+message UpsertOnboardingRequest {
+  int64 user_id = 1;
+  string nickname = 2;
+  int32 gender = 3;
+  int32 age = 4;
+  string bio = 5;
+  string location = 6;
+  string occupation = 7;
+  string education = 8;
+  int32 height = 9;
+  string birthday = 10;
+}
+
+message UpsertOnboardingResponse {
+  UserProfile profile = 1;
+}
+
+message PresignAvatarUploadRequest {
+  int64 user_id = 1;
+  string file_ext = 2;
+  string content_type = 3;
+  int64 content_length = 4;
+}
+
+message PresignAvatarUploadResponse {
+  string upload_url = 1;
+  string object_key = 2;
+  int64 expire_seconds = 3;
+}
+
+message ConfirmAvatarUploadRequest {
+  int64 user_id = 1;
+  string object_key = 2;
+}
+
+message ConfirmAvatarUploadResponse {
+  UserProfile profile = 1;
+}
+
+message GetUserInterestsRequest {
+  int64 user_id = 1;
+}
+
+message GetUserInterestsResponse {
+  repeated UserInterest interests = 1;
+}
+
+message ReplaceUserInterestsRequest {
+  int64 user_id = 1;
+  repeated UserInterest interests = 2;
+}
+
+message ReplaceUserInterestsResponse {
+  repeated UserInterest interests = 1;
+}
+
+message UpdateRegulationStatusRequest {
+  int64 user_id = 1;
+  int32 regulation_status = 2;
+  string reason = 3;
+}
+
+message UpdateRegulationStatusResponse {
+  UserProfile profile = 1;
+}
+
+message ListRegulationLogsRequest {
+  int64 user_id = 1;
+  int32 limit = 2;
+}
+
+message ListRegulationLogsResponse {
+  repeated RegulationLog logs = 1;
+}
+
+message RegulationLog {
+  int64 id = 1;
+  int64 user_id = 2;
+  int32 before_status = 3;
+  int32 after_status = 4;
+  string reason = 5;
+  int32 operator_type = 6;
+  string operator_id = 7;
+  int64 created_at_ms = 8;
+}
+
+message UserProfile {
+  int64 user_id = 1;
+  string app_name = 2;
+  bool pending = 3;
+  string nickname = 4;
+  int32 gender = 5;
+  int32 age = 6;
+  string bio = 7;
+  string location = 8;
+  string occupation = 9;
+  string education = 10;
+  int32 height = 11;
+  int32 regulation_status = 12;
+  Avatar avatar = 13;
+  repeated UserInterest interests = 14;
+  int32 profile_completion = 15;
+  repeated string missing_fields = 16;
+  string birthday = 17;
+}
+
+message Avatar {
+  string original_key = 1;
+  string min_key = 2;
+  string mid_key = 3;
+  string original_url = 4;
+  string min_url = 5;
+  string mid_url = 6;
+  string status = 7;
+}
+
+message UserInterest {
+  string interest_code = 1;
+  string display_name = 2;
+  InterestType type = 3;
+  string pic_key = 4;
+  int32 sort_order = 5;
+}
+
+enum InterestType {
+  INTEREST_TYPE_UNSPECIFIED = 0;
+  INTEREST_TYPE_TEXT = 1;
+  INTEREST_TYPE_PICTURE = 2;
 }
 
 enum Platform {

@@ -1,7 +1,11 @@
 package com.aurora.dating.user.grpc;
 
 import com.aurora.dating.user.entity.UserInfoEntity;
+import com.aurora.dating.user.service.ResolveOrCreateResult;
 import com.aurora.dating.user.service.UserIdentityService;
+import com.dating.hanlian.proto.user.v1.BindAccountResponse;
+import com.dating.hanlian.proto.user.v1.BindPhoneRequest;
+import com.dating.hanlian.proto.user.v1.BindThirdPartyRequest;
 import com.dating.hanlian.proto.user.v1.CheckBanRequest;
 import com.dating.hanlian.proto.user.v1.CheckBanResponse;
 import com.dating.hanlian.proto.user.v1.ResolveOrCreateByDeviceRequest;
@@ -36,13 +40,15 @@ public class UserIdentityGrpcService extends UserIdentityServiceGrpc.UserIdentit
             ResolveOrCreateByPhoneRequest request,
             StreamObserver<ResolveOrCreateResponse> responseObserver) {
         try {
-            UserInfoEntity user = userIdentityService.resolveOrCreateByPhone(
+            ResolveOrCreateResult result = userIdentityService.resolveOrCreateByPhone(
                     request.getPhoneE164(),
                     request.getAppName());
+            UserInfoEntity user = result.user();
 
             ResolveOrCreateResponse response = ResolveOrCreateResponse.newBuilder()
                     .setUserId(user.getUserId())
                     .setPending(Boolean.TRUE.equals(user.getPending()))
+                    .setCreated(result.created())
                     .build();
 
             responseObserver.onNext(response);
@@ -62,14 +68,16 @@ public class UserIdentityGrpcService extends UserIdentityServiceGrpc.UserIdentit
             ResolveOrCreateByDeviceRequest request,
             StreamObserver<ResolveOrCreateResponse> responseObserver) {
         try {
-            UserInfoEntity user = userIdentityService.resolveOrCreateByDevice(
+            ResolveOrCreateResult result = userIdentityService.resolveOrCreateByDevice(
                     request.getDeviceId(),
                     request.getPlatformValue(),
                     request.getAppName());
+            UserInfoEntity user = result.user();
 
             ResolveOrCreateResponse response = ResolveOrCreateResponse.newBuilder()
                     .setUserId(user.getUserId())
                     .setPending(Boolean.TRUE.equals(user.getPending()))
+                    .setCreated(result.created())
                     .build();
 
             responseObserver.onNext(response);
@@ -83,9 +91,69 @@ public class UserIdentityGrpcService extends UserIdentityServiceGrpc.UserIdentit
     public void resolveOrCreateByThirdParty(
             ResolveOrCreateByThirdPartyRequest request,
             StreamObserver<ResolveOrCreateResponse> responseObserver) {
-        responseObserver.onError(Status.UNIMPLEMENTED
-                .withDescription("ResolveOrCreateByThirdParty is not implemented yet")
-                .asRuntimeException());
+        try {
+            ResolveOrCreateResult result = userIdentityService.resolveOrCreateByThirdParty(
+                    request.getPlatformValue(),
+                    request.getThirdPartyUserId(),
+                    request.getAppName(),
+                    request.getEmail());
+            UserInfoEntity user = result.user();
+
+            ResolveOrCreateResponse response = ResolveOrCreateResponse.newBuilder()
+                    .setUserId(user.getUserId())
+                    .setPending(Boolean.TRUE.equals(user.getPending()))
+                    .setCreated(result.created())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            handleException(e, responseObserver);
+        }
+    }
+
+    @Override
+    public void bindPhone(
+            BindPhoneRequest request,
+            StreamObserver<BindAccountResponse> responseObserver) {
+        try {
+            UserInfoEntity user = userIdentityService.bindPhone(
+                    request.getUserId(),
+                    request.getPhoneE164(),
+                    request.getAppName());
+
+            BindAccountResponse response = BindAccountResponse.newBuilder()
+                    .setUserId(user.getUserId())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            handleException(e, responseObserver);
+        }
+    }
+
+    @Override
+    public void bindThirdParty(
+            BindThirdPartyRequest request,
+            StreamObserver<BindAccountResponse> responseObserver) {
+        try {
+            UserInfoEntity user = userIdentityService.bindThirdParty(
+                    request.getUserId(),
+                    request.getPlatformValue(),
+                    request.getThirdPartyUserId(),
+                    request.getAppName(),
+                    request.getEmail());
+
+            BindAccountResponse response = BindAccountResponse.newBuilder()
+                    .setUserId(user.getUserId())
+                    .build();
+
+            responseObserver.onNext(response);
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            handleException(e, responseObserver);
+        }
     }
 
     /**

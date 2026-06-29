@@ -2,6 +2,7 @@ package com.aurora.dating.user.grpc;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerInterceptors;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +15,8 @@ public class UserGrpcServerLifecycle implements SmartLifecycle {
 
     private static final Logger log = LoggerFactory.getLogger(UserGrpcServerLifecycle.class);
     private final UserIdentityGrpcService userIdentityGrpcService;
+    private final UserProfileGrpcService userProfileGrpcService;
+    private final UserContextServerInterceptor userContextServerInterceptor;
 
     private final UserGrpcService userGrpcService;
     private final int port;
@@ -23,9 +26,13 @@ public class UserGrpcServerLifecycle implements SmartLifecycle {
     public UserGrpcServerLifecycle(
             UserGrpcService userGrpcService,
             UserIdentityGrpcService userIdentityGrpcService,
+            UserProfileGrpcService userProfileGrpcService,
+            UserContextServerInterceptor userContextServerInterceptor,
             @Value("${grpc.server.port:19081}") int grpcPort) {
         this.userGrpcService = userGrpcService;
         this.userIdentityGrpcService = userIdentityGrpcService;
+        this.userProfileGrpcService = userProfileGrpcService;
+        this.userContextServerInterceptor = userContextServerInterceptor;
         this.port = grpcPort;
     }
 
@@ -44,8 +51,9 @@ public class UserGrpcServerLifecycle implements SmartLifecycle {
         try {
             // 1. Bind the generated UserService contract implementation to a dedicated gRPC port.
             server = ServerBuilder.forPort(port)
-                    .addService(userGrpcService)
-                    .addService(userIdentityGrpcService)
+                    .addService(ServerInterceptors.intercept(userGrpcService, userContextServerInterceptor))
+                    .addService(ServerInterceptors.intercept(userIdentityGrpcService, userContextServerInterceptor))
+                    .addService(ServerInterceptors.intercept(userProfileGrpcService, userContextServerInterceptor))
                     .build()
                     .start();
 
