@@ -12,23 +12,23 @@
 
 **数据模型**(V1 共 5 张表):
 
-| 表 | 用途 |
-|---|---|
-| `user_info`                       | 主资料(含 last_open_at) |
-| `user_login_phone`                | 手机号 ↔ userId 绑定 |
-| `user_third_party_registration`   | 第三方账号 ↔ userId 绑定 |
-| `user_device_registration`        | 设备 ↔ userId 绑定(快速登录) |
-| `user_interest`                   | 兴趣标签 |
+| 表                               | 用途                   |
+| ------------------------------- | -------------------- |
+| `user_info`                     | 主资料(含 last_open_at)  |
+| `user_login_phone`              | 手机号 ↔ userId 绑定      |
+| `user_third_party_registration` | 第三方账号 ↔ userId 绑定    |
+| `user_device_registration`      | 设备 ↔ userId 绑定(快速登录) |
+| `user_interest`                 | 兴趣标签                 |
 
 与 `mobile-gateway` 的职责分割(关键、必须先看):
 
-| 维度 | mobile-gateway(鉴权域) | user-service(身份/资料域) |
-|---|---|---|
-| 关注问题 | 「这一次会话」凭证 | 「我是谁」「我长什么样」 |
-| 表 | `auth_device`(设备指纹 / 推送 token)/ `auth_refresh_token`(refresh token hash) | `user_info` / `user_login_phone` / `user_third_party_registration` / `user_device_registration` / `user_interest` |
-| 输入 | 短信验证码 / 第三方 token / 设备 ID | 已验证过的 phone / third-party id / device id |
-| 输出 | access JWT + refresh token | userId + 用户资料 |
-| 是否调对方 | 调 user-service `ResolveOrCreate` 拿 userId | 不调网关 |
+| 维度    | mobile-gateway(鉴权域)                                                      | user-service(身份/资料域)                                                                                              |
+| ----- | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| 关注问题  | 「这一次会话」凭证                                                                | 「我是谁」「我长什么样」                                                                                                      |
+| 表     | `auth_device`(设备指纹 / 推送 token)/ `auth_refresh_token`(refresh token hash) | `user_info` / `user_login_phone` / `user_third_party_registration` / `user_device_registration` / `user_interest` |
+| 输入    | 短信验证码 / 第三方 token / 设备 ID                                                | 已验证过的 phone / third-party id / device id                                                                          |
+| 输出    | access JWT + refresh token                                               | userId + 用户资料                                                                                                     |
+| 是否调对方 | 调 user-service `ResolveOrCreate` 拿 userId                                | 不调网关                                                                                                              |
 
 登录闭环示意:
 
@@ -71,24 +71,25 @@
 
 ## 3. 技术选型
 
-| 类别 | 选型 | 说明 |
-|---|---|---|
-| 语言 / 运行时 | JDK 21 + `temurin:21-jre-alpine` | 与 `example-service` / 网关一致 |
-| Web 框架 | Spring Boot 3.3.5 + **Spring MVC + 虚拟线程**(`spring.threads.virtual.enabled=true`) | 服务自身的 Actuator / 健康检查跑虚拟线程;gRPC 服务端线程模型独立 |
-| 持久层 | PostgreSQL + **MyBatis-Plus 3.5.7** + Flyway 10 | 单表 CRUD 走 BaseMapper / LambdaQueryWrapper,复杂单表 SQL 走 XML,跨表组装在 service 层 |
-| 对象存储 | S3 兼容(全环境 iDrive® e2,bucket 区分 dev/test/prod),bucket `dating-user` | 头像 / 兴趣图全部 presign 直传;DB 只存 `object_key`;统一经 `dating-common` 的 `ObjectStorage` 接口访问 |
-| 缓存 | Redis(前缀 **`user:`**) | 资料 Hash + 兴趣 + 注册锁 + 封禁状态 |
-| 服务发现 / 配置 | Nacos Discovery + Nacos Config | 已通过 `spring.config.import: optional:nacos:...` 接入,命名空间 `dating-test` |
-| gRPC 服务端 | `grpc-java` + `grpc-spring-boot-starter` | 待添加依赖;端口 `9090`(区别于 HTTP `8080`) |
-| Proto 依赖 | Nexus Maven 仓库 `com.jianjiange.proto:user-proto:<version>` | 三语言同版本号;不在本仓库跑 protoc(红线 4) |
-| 对象映射 | **MapStruct(仅 POJO 侧) + 手写 proto builder** | entity↔VO、proto getter→VO 用 MapStruct;出参 proto message 一律手写 builder(MapStruct 不能 target protobuf builder,引第三方扩展踩红线 6);禁止 BeanUtils |
-| 参数校验 | `spring-boot-starter-validation` (JSR-380) | `@Valid` + 全局异常 |
-| 手机号规范化 | `libphonenumber` | 入参一律 normalize 到 E.164 |
-| 分布式锁 | Redisson | 注册解析锁 `lock:user:register:<key>` |
-| 健康检查 / 指标 | Actuator + Micrometer Prometheus | 已暴露 `/actuator/health,info,prometheus` |
-| 链路追踪 | Micrometer Tracing + W3C TraceContext | gRPC `ServerInterceptor` 从 Metadata 读 `x-trace-id` 注入 MDC |
+| 类别        | 选型                                                                               | 说明                                                                                                                                 |
+| --------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| 语言 / 运行时  | JDK 21 + `temurin:21-jre-alpine`                                                 | 与 `example-service` / 网关一致                                                                                                         |
+| Web 框架    | Spring Boot 3.3.5 + **Spring MVC + 虚拟线程**(`spring.threads.virtual.enabled=true`) | 服务自身的 Actuator / 健康检查跑虚拟线程;gRPC 服务端线程模型独立                                                                                          |
+| 持久层       | PostgreSQL + **MyBatis-Plus 3.5.7** + Flyway 10                                  | 单表 CRUD 走 BaseMapper / LambdaQueryWrapper,复杂单表 SQL 走 XML,跨表组装在 service 层                                                           |
+| 对象存储      | S3 兼容(全环境 iDrive® e2,bucket 区分 dev/test/prod),bucket `dating-user`               | 头像 / 兴趣图全部 presign 直传;DB 只存 `object_key`;统一经 `dating-common` 的 `ObjectStorage` 接口访问                                                |
+| 缓存        | Redis(前缀 **`user:`**)                                                            | 资料 Hash + 兴趣 + 注册锁 + 封禁状态                                                                                                          |
+| 服务发现 / 配置 | Nacos Discovery + Nacos Config                                                   | 已通过 `spring.config.import: optional:nacos:...` 接入,命名空间 `dating-test`                                                               |
+| gRPC 服务端  | `grpc-java` + `grpc-spring-boot-starter`                                         | 待添加依赖;端口 `9090`(区别于 HTTP `8080`)                                                                                                   |
+| Proto 依赖  | Nexus Maven 仓库 `com.jianjiange.proto:user-proto:<version>`                       | 三语言同版本号;不在本仓库跑 protoc(红线 4)                                                                                                        |
+| 对象映射      | **MapStruct(仅 POJO 侧) + 手写 proto builder**                                       | entity↔VO、proto getter→VO 用 MapStruct;出参 proto message 一律手写 builder(MapStruct 不能 target protobuf builder,引第三方扩展踩红线 6);禁止 BeanUtils |
+| 参数校验      | `spring-boot-starter-validation` (JSR-380)                                       | `@Valid` + 全局异常                                                                                                                    |
+| 手机号规范化    | `libphonenumber`                                                                 | 入参一律 normalize 到 E.164                                                                                                             |
+| 分布式锁      | Redisson                                                                         | 注册解析锁 `lock:user:register:<key>`                                                                                                   |
+| 健康检查 / 指标 | Actuator + Micrometer Prometheus                                                 | 已暴露 `/actuator/health,info,prometheus`                                                                                             |
+| 链路追踪      | Micrometer Tracing + W3C TraceContext                                            | gRPC `ServerInterceptor` 从 Metadata 读 `x-trace-id` 注入 MDC                                                                          |
 
 **当前 pom 还缺**(开工时补齐):
+
 - `grpc-spring-boot-starter` + proto stub 依赖
 - `redisson-spring-boot-starter`
 - `dating-common`(已传递 `software.amazon.awssdk:s3` + `ObjectStorageAutoConfiguration`,业务直接 `@Autowired ObjectStorage`)
@@ -153,38 +154,38 @@ com.dating.user
 
 **`UserIdentityService`**(身份解析 + 封禁)
 
-| RPC | 用途 | 入参关键字段 |
-|---|---|---|
-| `ResolveOrCreateByPhone`     | 网关短信登录后调用:找现有用户或创建 placeholder,并更新 `last_open_at` | `phoneE164, appName` |
-| `ResolveOrCreateByThirdParty`| 第三方登录后调用,并更新 `last_open_at` | `platform, thirdPartyUserId, appName, googleEmail?` |
-| `ResolveOrCreateByDevice`    | 快速登录(无短信 / 无三方):用 deviceId 找现有用户或创建 placeholder,并更新 `last_open_at` | `deviceId, platform, appName` |
-| `CheckBan`                   | 网关 / 业务方查封禁 | `userId` → `BanResult` |
+| RPC                           | 用途                                                                 | 入参关键字段                                              |
+| ----------------------------- | ------------------------------------------------------------------ | --------------------------------------------------- |
+| `ResolveOrCreateByPhone`      | 网关短信登录后调用:找现有用户或创建 placeholder,并更新 `last_open_at`                  | `phoneE164, appName`                                |
+| `ResolveOrCreateByThirdParty` | 第三方登录后调用,并更新 `last_open_at`                                        | `platform, thirdPartyUserId, appName, googleEmail?` |
+| `ResolveOrCreateByDevice`     | 快速登录(无短信 / 无三方):用 deviceId 找现有用户或创建 placeholder,并更新 `last_open_at` | `deviceId, platform, appName`                       |
+| `CheckBan`                    | 网关 / 业务方查封禁                                                        | `userId` → `BanResult`                              |
 
 **`UserProfileService`**(资料 + 兴趣 + 头像,合一)
 
-| RPC | 用途 |
-|---|---|
-| `GetProfile`            | 单用户读取,**默认返回主资料 + 兴趣 + 头像 URL**(不裁剪由网关 BFF 决定字段) |
-| `BatchGetProfile`       | 批量读取(≤200 / 次),Redis miss 后批量 DB 回填 |
-| `UpdateProfile`         | 资料编辑(动态 SET,跳过 null 字段);**MVP 暴露字段见下表** |
-| `UpsertOnboarding`      | onboarding 一次性写入完整资料 + 默认头像;**`gender` / `birthday` 等编辑页改不到的字段的唯一写入入口** |
-| `ReplaceUserInterests`  | 全量替换兴趣标签;图片标签 ≤ 9,文字标签 ≤ 50 |
-| `PresignAvatarUpload`   | 签 putObject URL,object_key = `avatar/{userId}/{uuid}.{ext}` |
-| `ConfirmAvatarUpload`   | 客户端上传完调用,校验存在 + 更新 `user_info.custom_avatar` JSONB + 清缓存 |
+| RPC                    | 用途                                                                      |
+| ---------------------- | ----------------------------------------------------------------------- |
+| `GetProfile`           | 单用户读取,**默认返回主资料 + 兴趣 + 头像 URL**(不裁剪由网关 BFF 决定字段)                        |
+| `BatchGetProfile`      | 批量读取(≤200 / 次),Redis miss 后批量 DB 回填                                     |
+| `UpdateProfile`        | 资料编辑(动态 SET,跳过 null 字段);**MVP 暴露字段见下表**                                 |
+| `UpsertOnboarding`     | onboarding 一次性写入完整资料 + 默认头像;**`gender` / `birthday` 等编辑页改不到的字段的唯一写入入口** |
+| `ReplaceUserInterests` | 全量替换兴趣标签;图片标签 ≤ 9,文字标签 ≤ 50                                             |
+| `PresignAvatarUpload`  | 签 putObject URL,object_key = `avatar/{userId}/{uuid}.{ext}`             |
+| `ConfirmAvatarUpload`  | 客户端上传完调用,校验存在 + 更新 `user_info.custom_avatar` JSONB + 清缓存                |
 
 **`UpdateProfile` MVP 字段集**(对齐 App「Edit info」编辑页):
 
-| UI 字段 | proto / VO 字段 | entity / DB 字段 | 备注 |
-|---|---|---|---|
-| Avatar     | 不在 UpdateProfile | `user_info.custom_avatar` JSONB | 走 `PresignAvatarUpload` + `ConfirmAvatarUpload` |
-| Tags       | 不在 UpdateProfile | `user_interest` 全表 | 走 `ReplaceUserInterests` |
-| Age        | `age`         | `user_info.age`            | SMALLINT |
-| Nickname   | `nickname`    | `user_info.nickname`       | 长度 ≤ 64,前后去空格 |
-| Location   | `location`    | `user_info.preferred_location` | 截图显示「北京市」,存中文字符串,长度 ≤ 128 |
-| Bio        | `bio`         | `user_info.bio`            | 长度 ≤ 500(service 层卡) |
-| Occupation | `occupation`  | `user_info.profession`     | **UI 叫 Occupation,DB 叫 profession** —— MapStruct converter 做映射,proto / VO 一律 `occupation` 对齐前端 |
-| Education  | `education`   | `user_info.education`      | 长度 ≤ 128 |
-| Height     | `height`      | `user_info.height`         | SMALLINT,单位 cm |
+| UI 字段      | proto / VO 字段    | entity / DB 字段                  | 备注                                                                                             |
+| ---------- | ---------------- | ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Avatar     | 不在 UpdateProfile | `user_info.custom_avatar` JSONB | 走 `PresignAvatarUpload` + `ConfirmAvatarUpload`                                                |
+| Tags       | 不在 UpdateProfile | `user_interest` 全表              | 走 `ReplaceUserInterests`                                                                       |
+| Age        | `age`            | `user_info.age`                 | SMALLINT                                                                                       |
+| Nickname   | `nickname`       | `user_info.nickname`            | 长度 ≤ 64,前后去空格                                                                                  |
+| Location   | `location`       | `user_info.preferred_location`  | 截图显示「北京市」,存中文字符串,长度 ≤ 128                                                                      |
+| Bio        | `bio`            | `user_info.bio`                 | 长度 ≤ 500(service 层卡)                                                                           |
+| Occupation | `occupation`     | `user_info.profession`          | **UI 叫 Occupation,DB 叫 profession** —— MapStruct converter 做映射,proto / VO 一律 `occupation` 对齐前端 |
+| Education  | `education`      | `user_info.education`           | 长度 ≤ 128                                                                                       |
+| Height     | `height`         | `user_info.height`              | SMALLINT,单位 cm                                                                                 |
 
 **`UpdateProfile` 接口面规则**:
 
@@ -284,14 +285,14 @@ phone / third-party 两套显式入口,**不混合多键优先级**。
 
 **缓存 key 规范**(CLAUDE.md:`<service>:<domain>:<id>`,本服务全部 `user:*`):
 
-| Key | 类型 | TTL | 说明 |
-|---|---|---|---|
-| `user:profile:{userId}` | Hash | 24h | user_info 主表字段镜像(不含 custom_avatar 等大字段,避免热 key) |
-| `user:profile:big:{userId}` | String(JSON) | 24h | custom_avatar 等大字段独立 key |
-| `user:interest:{userId}` | String(JSON) | 7d | 兴趣全量 JSON |
-| `user:ban:status:{userId}` | String | 5m | 封禁状态短缓存,避免登录高频回源 |
-| `lock:user:register:phone:<...>` | String(NX) | 30s | 注册解析锁 |
-| `lock:user:register:tp:<...>` | String(NX) | 30s | 注册解析锁 |
+| Key                              | 类型           | TTL | 说明                                              |
+| -------------------------------- | ------------ | --- | ----------------------------------------------- |
+| `user:profile:{userId}`          | Hash         | 24h | user_info 主表字段镜像(不含 custom_avatar 等大字段,避免热 key) |
+| `user:profile:big:{userId}`      | String(JSON) | 24h | custom_avatar 等大字段独立 key                        |
+| `user:interest:{userId}`         | String(JSON) | 7d  | 兴趣全量 JSON                                       |
+| `user:ban:status:{userId}`       | String       | 5m  | 封禁状态短缓存,避免登录高频回源                                |
+| `lock:user:register:phone:<...>` | String(NX)   | 30s | 注册解析锁                                           |
+| `lock:user:register:tp:<...>`    | String(NX)   | 30s | 注册解析锁                                           |
 
 **一致性策略**(CLAUDE.md 强约束):
 
@@ -343,15 +344,15 @@ message BanResult {
 
 ## 6. 与现有约束的对齐
 
-| CLAUDE.md 红线 | 本方案如何遵守 |
-|---|---|
-| 红线 1:持久层多表 JOIN | 4 张表全部单表 CRUD;BFF 聚合不在本服务做;批量取 `WHERE in (...)` 一次性捞 |
-| 红线 2:跨服务直连别人库 | 不持有任何其他服务的库 / Redis key;自身 Redis key 全部 `user:` 前缀 |
-| 红线 3:服务间 HTTP 互调 | 对外只暴露 gRPC(HTTP `8080` 仅 Actuator);调他人服务也走 gRPC |
+| CLAUDE.md 红线              | 本方案如何遵守                                                                        |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| 红线 1:持久层多表 JOIN           | 4 张表全部单表 CRUD;BFF 聚合不在本服务做;批量取 `WHERE in (...)` 一次性捞                           |
+| 红线 2:跨服务直连别人库             | 不持有任何其他服务的库 / Redis key;自身 Redis key 全部 `user:` 前缀                             |
+| 红线 3:服务间 HTTP 互调          | 对外只暴露 gRPC(HTTP `8080` 仅 Actuator);调他人服务也走 gRPC                                |
 | 红线 4:proto 拷贝 / submodule | stub 走 Nexus Maven `com.jianjiange.proto:user-proto:<ver>`,pom 声明,本仓库不跑 protoc |
-| 红线 5:密钥入仓 | DB / Redis / 对象存储凭证全部 Nacos Config + 环境变量,application.yml 只有占位符 |
-| 红线 6:未评审中间件 | 仅使用 PG / Redis / S3 兼容对象存储 / Nacos / gRPC,全部在白名单 |
-| 红线 7:自建 IM / 长连 | 本服务不接触 IM;UserSig 由 `mobile-gateway` 调 `im-service` 获取 |
+| 红线 5:密钥入仓                 | DB / Redis / 对象存储凭证全部 Nacos Config + 环境变量,application.yml 只有占位符                |
+| 红线 6:未评审中间件               | 仅使用 PG / Redis / S3 兼容对象存储 / Nacos / gRPC,全部在白名单                               |
+| 红线 7:自建 IM / 长连           | 本服务不接触 IM;UserSig 由 `mobile-gateway` 调 `im-service` 获取                         |
 
 ## 7. 不做什么(边界)
 

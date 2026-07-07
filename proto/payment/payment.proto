@@ -8,6 +8,32 @@ option java_outer_classname = "PaymentProto";
 
 service PaymentService {
   rpc Ping (PingRequest) returns (PingResponse);
+
+  rpc GetCoins (GetCoinsRequest) returns (GetCoinsResponse);
+
+  rpc GrantCoins (GrantCoinsRequest) returns (GrantCoinsResponse);
+
+  rpc ConsumeCoins (ConsumeCoinsRequest) returns (ConsumeCoinsResponse);
+
+  rpc GetSubscription (GetSubscriptionRequest) returns (GetSubscriptionResponse);
+
+  rpc CreateOrder (CreateOrderRequest) returns (CreateOrderResponse);
+
+  rpc PreparePayment (PreparePaymentRequest) returns (PreparePaymentResponse);
+
+  rpc MockPaySuccess (MockPaySuccessRequest) returns (MockPaySuccessResponse);
+
+  rpc GetOrder (GetOrderRequest) returns (GetOrderResponse);
+
+  rpc CloseOrder (CloseOrderRequest) returns (CloseOrderResponse);
+
+  rpc CloseExpiredOrder (CloseExpiredOrderRequest) returns (CloseExpiredOrderResponse);
+
+  rpc CloseExpiredOrders (CloseExpiredOrdersRequest) returns (CloseExpiredOrdersResponse);
+
+  rpc ListUserOrders (ListUserOrdersRequest) returns (ListUserOrdersResponse);
+
+  rpc ListProducts (ListProductsRequest) returns (ListProductsResponse);
 }
 
 message PingRequest {
@@ -16,4 +42,243 @@ message PingRequest {
 
 message PingResponse {
   string message = 1;
+}
+
+message GetCoinsRequest {
+  int64 user_id = 1;
+}
+
+message GetCoinsResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 user_id = 3;
+  int64 balance = 4;
+}
+
+message GrantCoinsRequest {
+  int64 user_id = 1;
+  int64 amount = 2;
+  string reason = 3;
+  string idempotency_key = 4;
+}
+
+message GrantCoinsResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 user_id = 3;
+  int64 balance = 4;
+  string ledger_no = 5;
+}
+
+message ConsumeCoinsRequest {
+  int64 user_id = 1;
+  int64 amount = 2;
+  string reason = 3;
+  string idempotency_key = 4;
+}
+
+message ConsumeCoinsResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 user_id = 3;
+  int64 balance = 4;
+  string ledger_no = 5;
+}
+
+message GetSubscriptionRequest {
+  int64 user_id = 1;
+}
+
+message GetSubscriptionResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 user_id = 3;
+  string tier = 4;
+  bool active = 5;
+  int64 expire_at_ms = 6;
+  int32 daily_right_swipe_limit = 7;
+  int32 daily_card_limit = 8;
+  int32 daily_super_hi_limit = 9;
+}
+
+message CreateOrderRequest {
+  int64 user_id = 1;
+  string product_code = 2;
+  string provider = 3;
+}
+
+message CreateOrderResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  string product_type = 5;
+  string product_code = 6;
+  string provider = 7;
+  int64 amount_cents = 8;
+  string currency = 9;
+  int64 coin_amount = 10;
+  string subscription_tier = 11;
+  int32 status = 12;
+}
+
+message PreparePaymentRequest {
+  string order_no = 1;
+  string return_url = 2;
+  string cancel_url = 3;
+}
+
+message PreparePaymentResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  string product_type = 5;
+  string product_code = 6;
+  string provider = 7;
+  int64 amount_cents = 8;
+  string currency = 9;
+  int32 status = 10;
+  string pay_url = 11;
+  string provider_payload = 12;
+  int64 expire_at_ms = 13;
+}
+
+message MockPaySuccessRequest {
+  string order_no = 1;
+  string provider_trade_no = 2;
+  int64 paid_amount_cents = 3;
+  string currency = 4;
+}
+
+message MockPaySuccessResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  string product_type = 5;
+  string product_code = 6;
+  string provider_trade_no = 7;
+  int32 status = 8;
+  int64 balance = 9;
+  string ledger_no = 10;
+  string tier = 11;
+  bool active = 12;
+  int64 expire_at_ms = 13;
+}
+
+message GetOrderRequest {
+  string order_no = 1;
+}
+
+message GetOrderResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  string product_type = 5;
+  string product_code = 6;
+  string provider = 7;
+  int64 amount_cents = 8;
+  string currency = 9;
+  int64 coin_amount = 10;
+  string subscription_tier = 11;
+  int32 status = 12;
+  string provider_trade_no = 13;
+  int64 paid_at_ms = 14;
+  int64 created_at_ms = 15;
+  int64 updated_at_ms = 16;
+}
+
+message CloseOrderRequest {
+  string order_no = 1;
+}
+
+message CloseOrderResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  string product_type = 5;
+  string product_code = 6;
+  int32 status = 7;
+  int64 closed_at_ms = 8;
+}
+
+message CloseExpiredOrderRequest {
+  string order_no = 1;
+  int32 expire_minutes = 2;
+}
+
+message CloseExpiredOrderResponse {
+  int32 code = 1;
+  string message = 2;
+  string order_no = 3;
+  int64 user_id = 4;
+  int32 status = 5;
+  bool expired = 6;
+  int64 closed_at_ms = 7;
+}
+
+message CloseExpiredOrdersRequest {
+  int32 expire_minutes = 1;
+}
+
+message CloseExpiredOrdersResponse {
+  int32 code = 1;
+  string message = 2;
+  int32 expire_minutes = 3;
+  int32 closed_count = 4;
+  int64 expired_before_ms = 5;
+  int64 closed_at_ms = 6;
+}
+
+message ListUserOrdersRequest {
+  int64 user_id = 1;
+  int32 limit = 2;
+}
+
+message OrderSummary {
+  string order_no = 1;
+  int64 user_id = 2;
+  string product_type = 3;
+  string product_code = 4;
+  string provider = 5;
+  int64 amount_cents = 6;
+  string currency = 7;
+  int64 coin_amount = 8;
+  string subscription_tier = 9;
+  int32 status = 10;
+  string provider_trade_no = 11;
+  int64 paid_at_ms = 12;
+  int64 closed_at_ms = 13;
+  int64 created_at_ms = 14;
+  int64 updated_at_ms = 15;
+}
+
+message ListUserOrdersResponse {
+  int32 code = 1;
+  string message = 2;
+  int64 user_id = 3;
+  repeated OrderSummary orders = 4;
+}
+
+message ListProductsRequest {
+}
+
+message ProductItem {
+  string product_code = 1;
+  string product_type = 2;
+  string title = 3;
+  int64 amount_cents = 4;
+  string currency = 5;
+  int64 coin_amount = 6;
+  string subscription_tier = 7;
+  int32 subscription_days = 8;
+}
+
+message ListProductsResponse {
+  int32 code = 1;
+  string message = 2;
+  repeated ProductItem products = 3;
 }

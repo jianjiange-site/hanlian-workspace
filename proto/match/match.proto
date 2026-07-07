@@ -8,6 +8,31 @@ option java_outer_classname = "MatchProto";
 
 service MatchService {
   rpc Ping (PingRequest) returns (PingResponse);
+  rpc GetTodayFeed (GetTodayFeedRequest) returns (GetTodayFeedResponse);
+  rpc SwipeCard (SwipeCardRequest) returns (SwipeCardResponse);
+  rpc SuperHi (SuperHiRequest) returns (SuperHiResponse);
+  rpc ListLikesOfMe (ListLikesOfMeRequest) returns (ListLikesOfMeResponse);
+  rpc ListVisitsOfMe (ListVisitsOfMeRequest) returns (ListVisitsOfMeResponse);
+  rpc RecordVisit (RecordVisitRequest) returns (RecordVisitResponse);
+}
+
+enum UserType {
+  USER_TYPE_UNSPECIFIED = 0;
+  USER_TYPE_BH = 1;
+  USER_TYPE_DH = 2;
+}
+
+enum SwipeAction {
+  SWIPE_ACTION_UNSPECIFIED = 0;
+  SWIPE_ACTION_LEFT = 1;
+  SWIPE_ACTION_RIGHT = 2;
+  SWIPE_ACTION_SUPER_HI = 3;
+}
+
+enum MatchSource {
+  MATCH_SOURCE_UNSPECIFIED = 0;
+  MATCH_SOURCE_SWIPE_MATCH = 1;
+  MATCH_SOURCE_SWIPE_SUPER_HI = 2;
 }
 
 message PingRequest {
@@ -16,4 +41,113 @@ message PingRequest {
 
 message PingResponse {
   string message = 1;
+}
+
+message FeedCard {
+  int64 target_user_id = 1;
+  UserType target_user_type = 2;
+  string nickname = 3;
+  int32 age = 4;
+  repeated string photo_keys = 5;
+  double distance_km = 6;
+}
+
+message MatchInfo {
+  int64 match_id = 1;
+  int64 user_id_a = 2;
+  int64 user_id_b = 3;
+  MatchSource source = 4;
+  int64 matched_at_unix_ms = 5;
+}
+
+message GetTodayFeedRequest {
+  int64 user_id = 1;
+  int32 count = 2;
+}
+
+message GetTodayFeedResponse {
+  repeated FeedCard cards = 1;
+  bool exhausted = 2;
+  int32 cards_remaining_today = 3;
+}
+
+message SwipeCardRequest {
+  int64 user_id = 1;
+  int64 target_user_id = 2;
+  UserType target_user_type = 3;
+  SwipeAction action = 4;
+}
+
+message SwipeCardResponse {
+  bool matched = 1;
+  MatchInfo match_info = 2;
+  bool idempotent = 3;
+  int32 cards_remaining_today = 4;
+  int32 right_swipes_remaining_today = 5;
+}
+
+message SuperHiRequest {
+  int64 user_id = 1;
+  int64 target_user_id = 2;
+  UserType target_user_type = 3;
+  bool use_coin = 4;
+}
+
+message SuperHiResponse {
+  bool matched = 1;
+  MatchInfo match_info = 2;
+  bool used_free_quota = 3;
+  bool used_coin = 4;
+  int32 super_hi_remaining_today = 5;
+  int32 right_swipes_remaining_today = 6;
+}
+
+message LikeUserVO {
+  int64 from_user_id = 1;
+  string nickname = 2;
+  int32 age = 3;
+  repeated string photo_keys = 4;
+  int64 liked_at_unix_ms = 5;
+}
+
+message ListLikesOfMeRequest {
+  int64 user_id = 1;
+  int32 page_size = 2;
+  int64 cursor_liked_at_unix_ms = 3;
+}
+
+message ListLikesOfMeResponse {
+  repeated LikeUserVO likes = 1;
+  int64 next_cursor_liked_at_unix_ms = 2;
+  bool has_more = 3;
+}
+
+message VisitUserVO {
+  int64 from_user_id = 1;
+  string nickname = 2;
+  int32 age = 3;
+  repeated string photo_keys = 4;
+  int64 visited_at_unix_ms = 5;
+  int32 visit_count = 6;
+}
+
+message ListVisitsOfMeRequest {
+  int64 user_id = 1;
+  int32 page_size = 2;
+  int64 cursor_visited_at_unix_ms = 3;
+}
+
+message ListVisitsOfMeResponse {
+  repeated VisitUserVO visits = 1;
+  int64 next_cursor_visited_at_unix_ms = 2;
+  bool has_more = 3;
+}
+
+message RecordVisitRequest {
+  int64 viewer_user_id = 1;
+  int64 target_user_id = 2;
+}
+
+message RecordVisitResponse {
+  bool ok = 1;
 }

@@ -8,6 +8,14 @@ option java_outer_classname = "ImProto";
 
 service ImService {
   rpc Ping (PingRequest) returns (PingResponse);
+  rpc OnRawCallback (OnRawCallbackRequest) returns (OnRawCallbackResponse);
+  rpc RegisterImUser (RegisterImUserRequest) returns (RegisterImUserResponse);
+  rpc GetImToken (GetImTokenRequest) returns (GetImTokenResponse);
+  rpc EnsureConversation (EnsureConversationRequest) returns (EnsureConversationResponse);
+  rpc SendSystemMessage (SendSystemMessageRequest) returns (SendSystemMessageResponse);
+  rpc GenerateCallToken (GenerateCallTokenRequest) returns (GenerateCallTokenResponse);
+  rpc ListOnlineUserIds (ListOnlineUserIdsRequest) returns (ListOnlineUserIdsResponse);
+  rpc ListRecentOfflineUsers (ListRecentOfflineUsersRequest) returns (ListRecentOfflineUsersResponse);
 }
 
 message PingRequest {
@@ -16,4 +24,97 @@ message PingRequest {
 
 message PingResponse {
   string message = 1;
+}
+
+message OnRawCallbackRequest {
+  string provider = 1;
+  bytes payload = 2;
+}
+
+message OnRawCallbackResponse {
+  int32 code = 1;
+  string message = 2;
+  bool allow = 3;
+}
+
+message RegisterImUserRequest {
+  int64 user_id = 1;
+  string nickname = 2;
+  string avatar = 3;
+}
+
+message RegisterImUserResponse {
+  bool success = 1;
+  string im_user_id = 2;
+  string message = 3;
+}
+
+message GetImTokenRequest {
+  int64 user_id = 1;
+  string platform = 2;
+}
+
+message GetImTokenResponse {
+  string im_user_id = 1;
+  string token = 2;
+  int64 expire_at_ms = 3;
+  bool mock = 4;
+}
+
+message EnsureConversationRequest {
+  int64 user_id_a = 1;
+  int64 user_id_b = 2;
+}
+
+message EnsureConversationResponse {
+  bool success = 1;
+  string conversation_id = 2;
+  string message = 3;
+}
+
+message SendSystemMessageRequest {
+  int64 to_user_id = 1;
+  string biz_type = 2;
+  string title = 3;
+  string content = 4;
+  string payload_json = 5;
+}
+
+message SendSystemMessageResponse {
+  bool success = 1;
+  string message_id = 2;
+  string message = 3;
+  bool mock = 4;
+}
+
+message GenerateCallTokenRequest {
+  int64 user_id = 1;
+  int64 peer_user_id = 2;
+}
+
+message GenerateCallTokenResponse {
+  string room_id = 1;
+  string token = 2;
+  int64 expire_at_ms = 3;
+  bool mock = 4;
+}
+
+message ListOnlineUserIdsRequest {
+  int64 since_ms = 1;
+  int64 until_ms = 2;
+  int32 limit = 3;
+}
+
+message ListOnlineUserIdsResponse {
+  repeated int64 user_ids = 1;
+}
+
+message ListRecentOfflineUsersRequest {
+  int64 since_ms = 1;
+  int64 until_ms = 2;
+  int32 limit = 3;
+}
+
+message ListRecentOfflineUsersResponse {
+  repeated int64 user_ids = 1;
 }

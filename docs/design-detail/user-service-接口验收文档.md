@@ -10,15 +10,15 @@
 
 ### 1.1 服务信息
 
-| 项 | 值 |
-|---|---|
-| 服务名 | `user-service` |
-| HTTP 端口 | `18081` |
-| gRPC 端口 | `19081` |
+| 项        | 值                                      |
+| -------- | -------------------------------------- |
+| 服务名      | `user-service`                         |
+| HTTP 端口  | `18081`                                |
+| gRPC 端口  | `19081`                                |
 | proto 文件 | `proto/user/src/main/proto/user.proto` |
-| gRPC 服务 | `dating.user.v1.UserIdentityService` |
-| 数据库 | PostgreSQL `dating_dev_hanlian` |
-| Redis | database `1` |
+| gRPC 服务  | `dating.user.v1.UserIdentityService`   |
+| 数据库      | PostgreSQL `dating_dev_hanlian`        |
+| Redis    | database `1`                           |
 
 ### 1.2 启动前检查
 
@@ -52,26 +52,26 @@ user-service gRPC server started on port 19081
 
 ### 1.3 常用表
 
-| 表 | 作用 |
-|---|---|
-| `user_info` | 用户主表，`id` 是数据库内部主键，`user_id` 是对外业务用户 ID |
-| `user_login_phone` | 手机号绑定表 |
-| `user_device_registration` | 设备绑定表 |
-| `user_third_party_registration` | 第三方账号绑定表 |
-| `user_interest` | 用户兴趣标签表 |
-| `flyway_history_user` | user-service Flyway 迁移历史表 |
+| 表                               | 作用                                      |
+| ------------------------------- | --------------------------------------- |
+| `user_info`                     | 用户主表，`id` 是数据库内部主键，`user_id` 是对外业务用户 ID |
+| `user_login_phone`              | 手机号绑定表                                  |
+| `user_device_registration`      | 设备绑定表                                   |
+| `user_third_party_registration` | 第三方账号绑定表                                |
+| `user_interest`                 | 用户兴趣标签表                                 |
+| `flyway_history_user`           | user-service Flyway 迁移历史表               |
 
 ### 1.4 当前 Redis key
 
-| Key | 作用 |
-|---|---|
-| `hanlian:user-service:check:redis` | `/internal/check/redis` 写入的连通性测试 key，TTL 60 秒 |
-| `hanlian:user:ban:status:{userId}` | `CheckBan` 封禁状态短缓存，TTL 5 分钟 |
-| `hanlian:user:profile:{userId}` | `GetProfile` 用户资料缓存，TTL 24 小时 |
-| `hanlian:user:interest:{userId}` | 用户兴趣标签缓存，TTL 24 小时 |
-| `hanlian:lock:user:register:phone:{phoneE164}:{appName}` | 手机号注册解析锁 |
-| `hanlian:lock:user:register:device:{platform}:{deviceId}:{appName}` | 设备注册解析锁 |
-| `hanlian:lock:user:register:third-party:{platform}:{thirdPartyUserId}:{appName}` | 第三方注册解析锁 |
+| Key                                                                              | 作用                                            |
+| -------------------------------------------------------------------------------- | --------------------------------------------- |
+| `hanlian:user-service:check:redis`                                               | `/internal/check/redis` 写入的连通性测试 key，TTL 60 秒 |
+| `hanlian:user:ban:status:{userId}`                                               | `CheckBan` 封禁状态短缓存，TTL 5 分钟                   |
+| `hanlian:user:profile:{userId}`                                                  | `GetProfile` 用户资料缓存，TTL 24 小时                 |
+| `hanlian:user:interest:{userId}`                                                 | 用户兴趣标签缓存，TTL 24 小时                            |
+| `hanlian:lock:user:register:phone:{phoneE164}:{appName}`                         | 手机号注册解析锁                                      |
+| `hanlian:lock:user:register:device:{platform}:{deviceId}:{appName}`              | 设备注册解析锁                                       |
+| `hanlian:lock:user:register:third-party:{platform}:{thirdPartyUserId}:{appName}` | 第三方注册解析锁                                      |
 
 业务缓存 key 的项目前缀来自 `REDIS_KEY_PREFIX`，默认是 `hanlian`。
 
@@ -116,11 +116,11 @@ UserProfileGrpcService
 
 gateway 调 user-service 时，会通过 gRPC Metadata 透传调用上下文：
 
-| Metadata | 来源 | user-service 用途 |
-|---|---|---|
-| `x-user-id` | gateway 当前 JWT 解析出的业务 `userId` | 注入 `UserContext.callerUserId()` 和日志 MDC |
-| `x-device-id` | HTTP 请求头 `x-device-id` | 注入 `UserContext.deviceId()` 和日志 MDC |
-| `x-trace-id` | HTTP 请求头 `x-trace-id`；缺失时 gateway 自动生成 UUID | 注入 `UserContext.traceId()` 和日志 MDC |
+| Metadata      | 来源                                          | user-service 用途                         |
+| ------------- | ------------------------------------------- | --------------------------------------- |
+| `x-user-id`   | gateway 当前 JWT 解析出的业务 `userId`              | 注入 `UserContext.callerUserId()` 和日志 MDC |
+| `x-device-id` | HTTP 请求头 `x-device-id`                      | 注入 `UserContext.deviceId()` 和日志 MDC     |
+| `x-trace-id`  | HTTP 请求头 `x-trace-id`；缺失时 gateway 自动生成 UUID | 注入 `UserContext.traceId()` 和日志 MDC      |
 
 代码链路：
 
@@ -317,18 +317,18 @@ ResolveOrCreateByPhone(ResolveOrCreateByPhoneRequest) returns (ResolveOrCreateRe
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段           | 类型       | 说明                                 |
+| ------------ | -------- | ---------------------------------- |
 | `phone_e164` | `string` | 手机号，建议 E.164 格式，如 `+8613800138001` |
-| `app_name` | `string` | App 名，如 `hanlian` |
+| `app_name`   | `string` | App 名，如 `hanlian`                  |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID，雪花 ID |
-| `pending` | `bool` | 是否资料未补全 |
-| `created` | `bool` | 本次是否创建了新用户，`true` 表示新建，`false` 表示命中旧绑定 |
+| 字段        | 类型      | 说明                                     |
+| --------- | ------- | -------------------------------------- |
+| `user_id` | `int64` | 业务用户 ID，雪花 ID                          |
+| `pending` | `bool`  | 是否资料未补全                                |
+| `created` | `bool`  | 本次是否创建了新用户，`true` 表示新建，`false` 表示命中旧绑定 |
 
 ### 4.4 grpcurl 测试
 
@@ -461,19 +461,19 @@ ResolveOrCreateByDevice(ResolveOrCreateByDeviceRequest) returns (ResolveOrCreate
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `device_id` | `string` | 客户端设备标识 |
-| `platform` | `Platform` | `PLATFORM_IOS` / `PLATFORM_ANDROID` / `PLATFORM_WEB` |
-| `app_name` | `string` | App 名，如 `hanlian` |
+| 字段          | 类型         | 说明                                                   |
+| ----------- | ---------- | ---------------------------------------------------- |
+| `device_id` | `string`   | 客户端设备标识                                              |
+| `platform`  | `Platform` | `PLATFORM_IOS` / `PLATFORM_ANDROID` / `PLATFORM_WEB` |
+| `app_name`  | `string`   | App 名，如 `hanlian`                                    |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型      | 说明            |
+| --------- | ------- | ------------- |
 | `user_id` | `int64` | 业务用户 ID，雪花 ID |
-| `pending` | `bool` | 是否资料未补全 |
-| `created` | `bool` | 本次是否创建了新用户 |
+| `pending` | `bool`  | 是否资料未补全       |
+| `created` | `bool`  | 本次是否创建了新用户    |
 
 ### 5.4 grpcurl 测试
 
@@ -595,18 +595,18 @@ CheckBan(CheckBanRequest) returns (CheckBanResponse)
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型      | 说明      |
+| --------- | ------- | ------- |
 | `user_id` | `int64` | 业务用户 ID |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `banned` | `bool` | 是否封禁 |
-| `reason` | `string` | 机器可读原因，如 `USER_BANNED` |
-| `banned_at_ms` | `int64` | 封禁时间，当前 P0 固定为 0 |
-| `message` | `string` | 展示文案 |
+| 字段             | 类型       | 说明                     |
+| -------------- | -------- | ---------------------- |
+| `banned`       | `bool`   | 是否封禁                   |
+| `reason`       | `string` | 机器可读原因，如 `USER_BANNED` |
+| `banned_at_ms` | `int64`  | 封禁时间，当前 P0 固定为 0       |
+| `message`      | `string` | 展示文案                   |
 
 ### 6.4 grpcurl 测试
 
@@ -739,20 +739,20 @@ ResolveOrCreateByThirdParty(ResolveOrCreateByThirdPartyRequest) returns (Resolve
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `platform` | `ThirdPartyPlatform` | `GOOGLE` / `APPLE` / `WECHAT` |
-| `third_party_user_id` | `string` | 第三方平台返回的唯一 ID |
-| `app_name` | `string` | App 名 |
-| `email` | `string` | 可选邮箱 |
+| 字段                    | 类型                   | 说明                            |
+| --------------------- | -------------------- | ----------------------------- |
+| `platform`            | `ThirdPartyPlatform` | `GOOGLE` / `APPLE` / `WECHAT` |
+| `third_party_user_id` | `string`             | 第三方平台返回的唯一 ID                 |
+| `app_name`            | `string`             | App 名                         |
+| `email`               | `string`             | 可选邮箱                          |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型      | 说明            |
+| --------- | ------- | ------------- |
 | `user_id` | `int64` | 业务用户 ID，雪花 ID |
-| `pending` | `bool` | 是否资料未补全 |
-| `created` | `bool` | 本次是否创建了新用户 |
+| `pending` | `bool`  | 是否资料未补全       |
+| `created` | `bool`  | 本次是否创建了新用户    |
 
 ### 7.4 grpcurl 测试
 
@@ -993,14 +993,14 @@ GetProfile(GetProfileRequest) returns (GetProfileResponse)
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型      | 说明      |
+| --------- | ------- | ------- |
 | `user_id` | `int64` | 业务用户 ID |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型            | 说明   |
+| --------- | ------------- | ---- |
 | `profile` | `UserProfile` | 用户资料 |
 
 #### grpcurl 测试
@@ -1030,17 +1030,17 @@ GetProfile(GetProfileRequest) returns (GetProfileResponse)
 
 `profile_completion` 是响应层派生字段，不落库。当前规则：
 
-| 字段 | 分值 | 缺失时 missing field |
-|---|---:|---|
-| `nickname` | 15 | `nickname` |
-| `gender > 0` | 10 | `gender` |
-| `age > 0` 或 `birthday` 有值 | 10 | `birthday` |
-| `bio` | 10 | `bio` |
-| `location` | 10 | `location` |
-| `occupation` | 10 | `occupation` |
-| `education` | 10 | `education` |
-| `height > 0` | 10 | `height` |
-| 非默认头像 | 15 | `avatar` |
+| 字段                        | 分值  | 缺失时 missing field |
+| ------------------------- | ---:| ----------------- |
+| `nickname`                | 15  | `nickname`        |
+| `gender > 0`              | 10  | `gender`          |
+| `age > 0` 或 `birthday` 有值 | 10  | `birthday`        |
+| `bio`                     | 10  | `bio`             |
+| `location`                | 10  | `location`        |
+| `occupation`              | 10  | `occupation`      |
+| `education`               | 10  | `education`       |
+| `height > 0`              | 10  | `height`          |
+| 非默认头像                     | 15  | `avatar`          |
 
 合计 100 分。默认头像 `status = DEFAULT` 时，不计入头像分。
 
@@ -1092,17 +1092,17 @@ UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse)
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
-| 
-ickname` | `string` | 昵称 |
-| `age` | `int32` | 年龄 |
-| `bio` | `string` | 个人简介 |
-| `location` | `string` | 城市，对应 `user_info.preferred_location` |
-| `occupation` | `string` | 职业，对应 `user_info.profession` |
-| `education` | `string` | 学历 |
-| `height` | `int32` | 身高，单位 cm |
+| 字段           | 类型       | 说明                                   |
+| ------------ | -------- | ------------------------------------ |
+| `user_id`    | `int64`  | 业务用户 ID                              |
+|              |          |                                      |
+| ickname`     | `string` | 昵称                                   |
+| `age`        | `int32`  | 年龄                                   |
+| `bio`        | `string` | 个人简介                                 |
+| `location`   | `string` | 城市，对应 `user_info.preferred_location` |
+| `occupation` | `string` | 职业，对应 `user_info.profession`         |
+| `education`  | `string` | 学历                                   |
+| `height`     | `int32`  | 身高，单位 cm                             |
 
 #### grpcurl 测试
 
@@ -1170,19 +1170,19 @@ UpsertOnboarding(UpsertOnboardingRequest) returns (UpsertOnboardingResponse)
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
-| 
-ickname` | `string` | 昵称 |
-| `gender` | `int32` | 性别，0 未知，1 男，2 女 |
-| `age` | `int32` | 年龄 |
-| `birthday` | `string` | 生日，格式 `yyyy-MM-dd`，不能是未来日期 |
-| `bio` | `string` | 个人简介 |
-| `location` | `string` | 城市 |
-| `occupation` | `string` | 职业 |
-| `education` | `string` | 学历 |
-| `height` | `int32` | 身高，单位 cm |
+| 字段           | 类型       | 说明                         |
+| ------------ | -------- | -------------------------- |
+| `user_id`    | `int64`  | 业务用户 ID                    |
+|              |          |                            |
+| ickname`     | `string` | 昵称                         |
+| `gender`     | `int32`  | 性别，0 未知，1 男，2 女            |
+| `age`        | `int32`  | 年龄                         |
+| `birthday`   | `string` | 生日，格式 `yyyy-MM-dd`，不能是未来日期 |
+| `bio`        | `string` | 个人简介                       |
+| `location`   | `string` | 城市                         |
+| `occupation` | `string` | 职业                         |
+| `education`  | `string` | 学历                         |
+| `height`     | `int32`  | 身高，单位 cm                   |
 
 #### grpcurl 测试
 
@@ -1283,12 +1283,12 @@ PresignAvatarUpload(PresignAvatarUploadRequest) returns (PresignAvatarUploadResp
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
-| `file_ext` | `string` | 文件扩展名，支持 `jpg / jpeg / png / webp` |
-| `content_type` | `string` | 上传文件 Content-Type |
-| `content_length` | `int64` | 文件大小，当前限制不超过 10MB |
+| 字段               | 类型       | 说明                                 |
+| ---------------- | -------- | ---------------------------------- |
+| `user_id`        | `int64`  | 业务用户 ID                            |
+| `file_ext`       | `string` | 文件扩展名，支持 `jpg / jpeg / png / webp` |
+| `content_type`   | `string` | 上传文件 Content-Type                  |
+| `content_length` | `int64`  | 文件大小，当前限制不超过 10MB                  |
 
 #### grpcurl 测试
 
@@ -1344,9 +1344,9 @@ ConfirmAvatarUpload(ConfirmAvatarUploadRequest) returns (ConfirmAvatarUploadResp
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
+| 字段           | 类型       | 说明                                      |
+| ------------ | -------- | --------------------------------------- |
+| `user_id`    | `int64`  | 业务用户 ID                                 |
 | `object_key` | `string` | 头像 object key，必须以 `avatar/{userId}/` 开头 |
 
 #### grpcurl 测试
@@ -1407,14 +1407,14 @@ GetUserInterests(GetUserInterestsRequest) returns (GetUserInterestsResponse)
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段        | 类型      | 说明      |
+| --------- | ------- | ------- |
 | `user_id` | `int64` | 业务用户 ID |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段          | 类型                      | 说明     |
+| ----------- | ----------------------- | ------ |
 | `interests` | `repeated UserInterest` | 兴趣标签列表 |
 
 #### grpcurl 测试
@@ -1470,20 +1470,20 @@ ReplaceUserInterests(ReplaceUserInterestsRequest) returns (ReplaceUserInterestsR
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
+| 字段          | 类型                      | 说明       |
+| ----------- | ----------------------- | -------- |
+| `user_id`   | `int64`                 | 业务用户 ID  |
 | `interests` | `repeated UserInterest` | 新的兴趣标签列表 |
 
 #### UserInterest 字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `interest_code` | `string` | 兴趣编码，例如 `music` |
-| `display_name` | `string` | 展示名称，例如 `音乐` |
-| `type` | `InterestType` | `INTEREST_TYPE_TEXT` 或 `INTEREST_TYPE_PICTURE` |
-| `pic_key` | `string` | 图片兴趣 object key，不存完整 URL |
-| `sort_order` | `int32` | 排序 |
+| 字段              | 类型             | 说明                                             |
+| --------------- | -------------- | ---------------------------------------------- |
+| `interest_code` | `string`       | 兴趣编码，例如 `music`                                |
+| `display_name`  | `string`       | 展示名称，例如 `音乐`                                   |
+| `type`          | `InterestType` | `INTEREST_TYPE_TEXT` 或 `INTEREST_TYPE_PICTURE` |
+| `pic_key`       | `string`       | 图片兴趣 object key，不存完整 URL                       |
+| `sort_order`    | `int32`        | 排序                                             |
 
 #### grpcurl 测试
 
@@ -1564,22 +1564,22 @@ UpdateRegulationStatus(UpdateRegulationStatusRequest) returns (UpdateRegulationS
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
-| `regulation_status` | `int32` | 目标审核 / 监管状态 |
-| `reason` | `string` | 更新原因，当前用于调用记录，后续可落审核日志表 |
+| 字段                  | 类型       | 说明                      |
+| ------------------- | -------- | ----------------------- |
+| `user_id`           | `int64`  | 业务用户 ID                 |
+| `regulation_status` | `int32`  | 目标审核 / 监管状态             |
+| `reason`            | `string` | 更新原因，当前用于调用记录，后续可落审核日志表 |
 
 #### 状态值约定
 
-| 值 | 含义 | CheckBan 行为 |
-|---:|---|---|
-| `0` | 正常 / 未审核 | 不封禁 |
-| `1` | 待审核 | 不封禁 |
-| `2` | 封禁 | 返回 `USER_BANNED` |
-| `3` | 审核通过 | 不封禁 |
-| `4` | 审核拒绝 | 不封禁 |
-| `5` | 暂停 | 返回 `USER_SUSPENDED` |
+| 值   | 含义       | CheckBan 行为         |
+| ---:| -------- | ------------------- |
+| `0` | 正常 / 未审核 | 不封禁                 |
+| `1` | 待审核      | 不封禁                 |
+| `2` | 封禁       | 返回 `USER_BANNED`    |
+| `3` | 审核通过     | 不封禁                 |
+| `4` | 审核拒绝     | 不封禁                 |
+| `5` | 暂停       | 返回 `USER_SUSPENDED` |
 
 #### grpcurl 设置待审核
 
@@ -1696,29 +1696,29 @@ ListRegulationLogs(ListRegulationLogsRequest) returns (ListRegulationLogsRespons
 
 #### proto 请求字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `user_id` | `int64` | 业务用户 ID |
-| `limit` | `int32` | 最多返回多少条，当前业务层默认 20，最大 100 |
+| 字段        | 类型      | 说明                        |
+| --------- | ------- | ------------------------- |
+| `user_id` | `int64` | 业务用户 ID                   |
+| `limit`   | `int32` | 最多返回多少条，当前业务层默认 20，最大 100 |
 
 #### proto 响应字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
+| 字段     | 类型                       | 说明              |
+| ------ | ------------------------ | --------------- |
 | `logs` | `repeated RegulationLog` | 审核 / 监管状态变更日志列表 |
 
 #### RegulationLog 字段
 
-| 字段 | 类型 | 说明 |
-|---|---|---|
-| `id` | `int64` | 日志 ID |
-| `user_id` | `int64` | 被修改状态的业务用户 ID |
-| `before_status` | `int32` | 修改前状态 |
-| `after_status` | `int32` | 修改后状态 |
-| `reason` | `string` | 修改原因 |
-| `operator_type` | `int32` | 操作者类型，当前默认 0 |
-| `operator_id` | `string` | 操作者 ID，当前可为空 |
-| `created_at_ms` | `int64` | 创建时间，毫秒时间戳 |
+| 字段              | 类型       | 说明            |
+| --------------- | -------- | ------------- |
+| `id`            | `int64`  | 日志 ID         |
+| `user_id`       | `int64`  | 被修改状态的业务用户 ID |
+| `before_status` | `int32`  | 修改前状态         |
+| `after_status`  | `int32`  | 修改后状态         |
+| `reason`        | `string` | 修改原因          |
+| `operator_type` | `int32`  | 操作者类型，当前默认 0  |
+| `operator_id`   | `string` | 操作者 ID，当前可为空  |
+| `created_at_ms` | `int64`  | 创建时间，毫秒时间戳    |
 
 #### grpcurl 测试
 
@@ -1775,11 +1775,11 @@ limit 5;
 
 #### 接口列表
 
-| HTTP 接口 | 作用 |
-|---|---|
-| `GET /api/v1/user/interests` | 查询当前登录用户兴趣 |
-| `PUT /api/v1/user/interests` | 全量替换当前登录用户兴趣 |
-| `GET /api/v1/user/me` | 查询当前用户资料，响应中包含 `avatar` 和 `interests` |
+| HTTP 接口                      | 作用                                    |
+| ---------------------------- | ------------------------------------- |
+| `GET /api/v1/user/interests` | 查询当前登录用户兴趣                            |
+| `PUT /api/v1/user/interests` | 全量替换当前登录用户兴趣                          |
+| `GET /api/v1/user/me`        | 查询当前用户资料，响应中包含 `avatar` 和 `interests` |
 
 #### 登录拿 token
 
@@ -1875,20 +1875,20 @@ UserIdentityGrpcService.handleException
 UserProfileGrpcService.handleException
 ```
 
-| Java 异常 | gRPC 状态 |
-|---|---|
+| Java 异常                    | gRPC 状态            |
+| -------------------------- | ------------------ |
 | `IllegalArgumentException` | `INVALID_ARGUMENT` |
-| 其他异常 | `INTERNAL` |
+| 其他异常                       | `INTERNAL`         |
 
 已验收异常：
 
-| 场景 | 预期 |
-|---|---|
-| `phoneE164` 为空 | `INVALID_ARGUMENT: phoneE164 is required` |
-| `deviceId` 为空 | `INVALID_ARGUMENT: deviceId is required` |
-| `userId = 0` | `INVALID_ARGUMENT: userId must be positive` |
+| 场景                    | 预期                                               |
+| --------------------- | ------------------------------------------------ |
+| `phoneE164` 为空        | `INVALID_ARGUMENT: phoneE164 is required`        |
+| `deviceId` 为空         | `INVALID_ARGUMENT: deviceId is required`         |
+| `userId = 0`          | `INVALID_ARGUMENT: userId must be positive`      |
 | `thirdPartyUserId` 为空 | `INVALID_ARGUMENT: thirdPartyUserId is required` |
-| Profile 用户不存在 | `INVALID_ARGUMENT: user not found` |
+| Profile 用户不存在         | `INVALID_ARGUMENT: user not found`               |
 
 记忆点：
 
@@ -1902,12 +1902,12 @@ UserProfileGrpcService.handleException
 
 当前关键迁移：
 
-| 版本 | 文件 | 作用 |
-|---|---|---|
-| `20260625.01` | `V20260625_01__init_user_identity_schema.sql` | 创建身份相关表 |
-| `20260626.01` | `V20260626_01__add_user_business_id.sql` | 给 `user_info` 增加业务 `user_id` |
-| `20260627.01` | `V20260627_01__add_user_third_party_registration.sql` | 创建第三方账号绑定表 |
-| `20260629.01` | `V20260629_01__create_user_interest.sql` | 创建用户兴趣标签表 |
+| 版本            | 文件                                                    | 作用                           |
+| ------------- | ----------------------------------------------------- | ---------------------------- |
+| `20260625.01` | `V20260625_01__init_user_identity_schema.sql`         | 创建身份相关表                      |
+| `20260626.01` | `V20260626_01__add_user_business_id.sql`              | 给 `user_info` 增加业务 `user_id` |
+| `20260627.01` | `V20260627_01__add_user_third_party_registration.sql` | 创建第三方账号绑定表                   |
+| `20260629.01` | `V20260629_01__create_user_interest.sql`              | 创建用户兴趣标签表                    |
 
 查询 Flyway 历史：
 
@@ -1960,10 +1960,10 @@ aurora:
 
 当前约定：
 
-| 服务 | worker-id |
-|---|---:|
-| user-service | `1` |
-| post-service | `2` |
+| 服务           | worker-id |
+| ------------ | ---------:|
+| user-service | `1`       |
+| post-service | `2`       |
 
 验收点：
 
@@ -2108,23 +2108,21 @@ dating-server/common/src/main/java/com/aurora/dating/common/id/SnowflakeIdProper
 
 ## 14. 当前实现与技术方案差异
 
-| 技术方案项 | 当前状态 |
-|---|---|
-| `ResolveOrCreateByPhone` | 已完成 |
-| `ResolveOrCreateByDevice` | 已完成 |
-| `ResolveOrCreateByThirdParty` | 已完成 |
-| `CheckBan` | 已完成，已接 Redis 短缓存 |
-| 业务 `user_id` | 已完成，使用 common 雪花 ID |
-| HTTP debug DB / Redis 检查 | 已完成 |
-| gRPC 参数校验和异常转换 | 已完成 |
-| Redisson 注册锁 | 已完成，覆盖 phone / device / third-party |
-| 封禁 Redis 短缓存 | 已完成 |
-| 用户资料 Profile | 已完成 GetProfile / UpdateProfile / UpsertOnboarding |
-| Profile Redis 缓存 | 已完成，GetProfile cache-aside，写后删除缓存 |
-| 头像 presign / confirm | 已完成，支持 presign、confirm、Profile 返回 avatar |
-| 兴趣标签 | 已完成 GetUserInterests / ReplaceUserInterests，已接 Redis 缓存和 gateway 接口 |
-| 资料审核 / 监管状态 | 已完成 UpdateRegulationStatus 最小闭环，支持更新 regulation_status、写入审核日志、查询审核日志，并联动 CheckBan 缓存 |
+| 技术方案项                         | 当前状态                                                                                 |
+| ----------------------------- | ------------------------------------------------------------------------------------ |
+| `ResolveOrCreateByPhone`      | 已完成                                                                                  |
+| `ResolveOrCreateByDevice`     | 已完成                                                                                  |
+| `ResolveOrCreateByThirdParty` | 已完成                                                                                  |
+| `CheckBan`                    | 已完成，已接 Redis 短缓存                                                                     |
+| 业务 `user_id`                  | 已完成，使用 common 雪花 ID                                                                  |
+| HTTP debug DB / Redis 检查      | 已完成                                                                                  |
+| gRPC 参数校验和异常转换                | 已完成                                                                                  |
+| Redisson 注册锁                  | 已完成，覆盖 phone / device / third-party                                                  |
+| 封禁 Redis 短缓存                  | 已完成                                                                                  |
+| 用户资料 Profile                  | 已完成 GetProfile / UpdateProfile / UpsertOnboarding                                    |
+| Profile Redis 缓存              | 已完成，GetProfile cache-aside，写后删除缓存                                                    |
+| 头像 presign / confirm          | 已完成，支持 presign、confirm、Profile 返回 avatar                                             |
+| 兴趣标签                          | 已完成 GetUserInterests / ReplaceUserInterests，已接 Redis 缓存和 gateway 接口                  |
+| 资料审核 / 监管状态                   | 已完成 UpdateRegulationStatus 最小闭环，支持更新 regulation_status、写入审核日志、查询审核日志，并联动 CheckBan 缓存 |
 
 当前文档验收的是 user-service P1 身份 + Profile + 头像 + 兴趣标签 + 监管状态与审核日志最小闭环版本。缩略图异步生成、对象存储真实 PUT 校验等成熟产品能力后续继续补。
-
-

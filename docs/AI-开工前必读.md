@@ -1,8 +1,8 @@
 # AI 开工前必读
 
 > 用途：这是一份给 AI 看的项目级开工导航。  
-> 目标：新对话开始后，AI 读完本文档，应能理解项目资料在哪里、先看什么、怎么判断当前进度、怎么和用户协作、接口验收文档应该怎么写。  
-> 注意：本文档不是具体服务技术方案。具体需求必须继续阅读 `docs/design` 和 `docs/design-detail`。
+> 目标：新对话开始后，AI 读完本文档，应能理解项目资料在哪里、先看什么、怎么判断当前进度、怎么和用户协作、接口链路设计文档应该怎么写。  
+> 注意：本文档不是具体服务技术方案。具体需求必须继续阅读 `docs/design`、`docs/design-detail` 和 `docs/接口链路设计`。
 
 ---
 
@@ -35,19 +35,21 @@ hanlian-workspace
 └── docs
     ├── design
     ├── design-detail
+    ├── 接口链路设计
     └── timeline
 ```
 
 目录约定：
 
-| 目录 | 作用 |
-|---|---|
-| `dating-server/{service-name}` | Java 微服务代码 |
-| `dating-server/common` | 公共 Java 模块 |
-| `proto/{service-name}` | proto 文件和生成代码模块 |
-| `docs/design` | 技术方案、需求设计、服务设计 |
-| `docs/design-detail` | 接口验收文档、优化清单、成熟产品差距分析 |
-| `docs/timeline` | 阶段复盘、历史问题、接入记录 |
+| 目录                             | 作用                        |
+| ------------------------------ | ------------------------- |
+| `dating-server/{service-name}` | Java 微服务代码                |
+| `dating-server/common`         | 公共 Java 模块                |
+| `proto/{service-name}`         | proto 文件和生成代码模块           |
+| `docs/design`                  | 技术方案、需求设计、服务设计            |
+| `docs/design-detail`           | 优化清单、成熟产品差距分析、历史验收文档      |
+| `docs/接口链路设计`                  | 各服务接口链路设计主文档，后续接口说明统一维护这里 |
+| `docs/timeline`                | 阶段复盘、历史问题、接入记录            |
 
 ---
 
@@ -76,11 +78,19 @@ payment-service
 
 ```text
 docs/design/{service-name} 相关技术方案
-docs/design-detail/{service-name} 相关接口验收文档
+docs/接口链路设计/{service-domain}-design.md 相关接口链路设计文档
 docs/design-detail/{service-name} 相关优化清单
 docs/timeline 里和该服务相关的复盘
 proto/{service-name}/src/main/proto
 dating-server/{service-name}
+```
+
+接口链路设计文档命名示例：
+
+```text
+payment-service -> docs/接口链路设计/payment-design.md
+user-service    -> docs/接口链路设计/user-design.md
+post-service    -> docs/接口链路设计/post-design.md
 ```
 
 如果没有完全对应的文件名，就用搜索找：
@@ -102,7 +112,7 @@ AI 读完文档和代码后，要先判断：
 - Flyway 是否已经执行过。
 - HTTP debug 接口是否存在。
 - gRPC 服务是否已经注册。
-- 是否已有接口验收文档。
+- 是否已有接口链路设计文档。
 - 是否已有 Postman collection。
 - 当前代码和文档有没有明显不一致。
 
@@ -242,11 +252,11 @@ mvn spring-boot:run
 
 通用判断：
 
-| 优先级 | 含义 |
-|---|---|
-| P0 | 核心主链路能跑通，能创建、查询、校验、返回正确结果 |
-| P1 | 幂等、异常、缓存、锁、文档、验收、基础优化 |
-| P2 | 成熟产品增强、风控、性能、高可用、运营能力、复杂策略 |
+| 优先级 | 含义                         |
+| --- | -------------------------- |
+| P0  | 核心主链路能跑通，能创建、查询、校验、返回正确结果  |
+| P1  | 幂等、异常、缓存、锁、文档、验收、基础优化      |
+| P2  | 成熟产品增强、风控、性能、高可用、运营能力、复杂策略 |
 
 示例：
 
@@ -258,7 +268,7 @@ user-service P0:
 - 业务 user_id
 - 数据库 migration
 - gRPC 异常处理
-- 接口验收文档
+- 接口链路设计文档
 ```
 
 ```text
@@ -271,47 +281,63 @@ post-service P0:
 - 用户帖子列表
 - Feed 基础推荐
 - Redis 计数增量
-- 接口验收文档
+- 接口链路设计文档
 ```
 
 AI 需要结合 `docs/design` 里的技术方案和当前代码判断，不要机械套模板。
 
 ---
 
-## 7. 接口验收文档标准
+## 7. 接口链路设计文档标准
 
-接口验收文档不是纯交付文档，而是：
+后续不要再新写或追加接口验收文档。接口相关说明统一维护在：
 
 ```text
-验收文档 + 简洁学习笔记
+docs/接口链路设计/{service-domain}-design.md
+```
+
+例如 payment-service 使用：
+
+```text
+docs/接口链路设计/payment-design.md
+```
+
+接口链路设计文档不是纯交付文档，而是：
+
+```text
+接口链路设计 + 简洁学习笔记 + 验收入口提示
 ```
 
 用途：
 
 - 给用户自己测试用。
-- 帮用户记忆和理解每个接口。
-- 后续新 AI 可以快速理解当前服务完成了什么。
+- 帮用户记忆和理解每个接口从 request 到 response 的完整链路。
+- 后续新 AI 可以快速理解当前服务有哪些接口、每个接口怎么走到数据库。
 
-建议放在：
+如果历史上已经存在：
 
 ```text
 docs/design-detail/{service-name}-接口验收文档.md
 ```
 
-如果用户指定其他位置，以用户要求为准。
+只作为历史参考，不再作为后续主要维护位置。新增接口、修改接口、补充链路说明时，优先更新 `docs/接口链路设计` 下对应文档。
 
 ### 7.1 必须覆盖范围
 
-接口验收文档要覆盖：
+接口链路设计文档要覆盖：
 
+- 每个 proto RPC。
+- 每个 RPC 的 request 参数。
+- 每个 RPC 的 response 参数。
 - HTTP debug 接口。
 - gRPC 方法。
-- HTTP 部分包含 Postman 里的测试内容。
-- 数据库验收项。
-- Redis 验收项。
-- 异常验收项。
-- 关键设计记忆点。
-- 当前实现与技术方案差异。
+- Controller / Grpc 入口。
+- Service 业务逻辑全流程。
+- Manager / Mapper 调用链路。
+- DB / Redis / Job 影响。
+- 幂等、异常、状态流转。
+- 幂等设计、并发安全设计、数据一致性设计等高技术含量的设计思路和方法。
+- 当前边界：哪些是 mock，哪些是真实能力，哪些还没完成。
 
 ### 7.2 每个接口必须包含什么
 
@@ -319,15 +345,17 @@ docs/design-detail/{service-name}-接口验收文档.md
 
 ```text
 1. 接口解决什么问题
-2. HTTP 请求路径、请求方式、请求参数 / 请求体
-3. HTTP 返回示例
-4. 对应的 gRPC 方法
-5. proto 请求字段和响应字段
-6. 完整代码链路
-7. 数据库验收项
-8. Redis 验收项
-9. 异常验收项
-10. 关键设计记忆点
+2. proto RPC 定义
+3. proto request 字段、类型、含义
+4. proto response 字段、类型、含义
+5. gRPC 接口全名和 grpcurl 示例
+6. HTTP debug 路径和 curl 示例
+7. Controller / Grpc -> Service -> Manager -> Mapper -> DB 的完整链路
+8. Service 内部关键分支、状态流转、幂等逻辑
+9. 并发安全设计：例如 SQL 条件更新、唯一索引、幂等键、锁、事务边界、重复请求处理
+10. 数据一致性设计：例如跨服务调用是否允许重试、是否依赖消息、失败后如何补偿或对账
+11. 数据库 / Redis / Job 影响
+12. 异常场景和当前边界
 ```
 
 代码链路格式：
@@ -360,9 +388,11 @@ Controller / Grpc
 
 - 简洁一点。
 - 不放太多代码。
-- 重点写测试命令、预期结果、链路、验收点。
+- 重点写 request / response 参数、入口、链路、状态变化、验收命令。
 - 提醒用户去 IDEA 里看关键文件。
 - 不要写成长篇源码讲解。
+- 每一个功能逻辑全流程单独一个章节。
+- 如果一个服务有 HTTP debug-only 功能，但没有 proto RPC，也可以单独写一个章节并明确说明。
 
 ---
 
@@ -377,6 +407,7 @@ AI 不要这样做：
 - 跳过数据库验收。
 - 跳过 Redis 验收。
 - 跳过异常验收。
+- 新增或修改接口后忘记更新 `docs/接口链路设计`。
 - 把 P1 / P2 功能说成 P0 已完成。
 - 随便重构不相关代码。
 - 覆盖用户未提交改动。
@@ -458,17 +489,16 @@ AI 每次开始一个服务的开发时，建议按这个流程：
 ```text
 1. 先确认当前服务和当前目标。
 2. 阅读 docs/design 里的对应技术方案。
-3. 阅读 docs/design-detail 里的接口验收文档 / 优化文档。
-4. 阅读 docs/timeline 里的相关复盘。
-5. 阅读 proto。
-6. 阅读 dating-server/{service-name} 当前代码。
-7. 判断 P0 / P1 / P2 当前进度。
-8. 给用户说明下一步应该做什么，以及为什么。
-9. 如果用户要自己写代码，先给步骤和完整方法。
-10. 如果用户说“你来改”，先说明改动范围，再动手。
-11. 改完编译验证。
-12. 指导用户做 HTTP / gRPC / DB / Redis / 异常验收。
-13. 更新接口验收文档或提醒用户更新。
+4. 阅读 docs/design-detail 里的优化文档 / 历史验收文档。
+6. 阅读 proto。
+7. 阅读 dating-server/{service-name} 当前代码。
+8. 判断 P0 / P1 / P2 当前进度。
+9. 给用户说明下一步应该做什么，以及为什么。
+10. 如果用户要自己写代码，先给步骤和完整方法。
+11. 如果用户说“你来改”，先说明改动范围，再动手。
+12. 改完编译验证。
+13. 指导用户做 HTTP / gRPC / DB / Redis / 异常验收。
+14. 新增或修改接口后，更新 `docs/接口链路设计/{service-domain}-design.md`。
 ```
 
 ---
@@ -481,7 +511,7 @@ AI 每次开始一个服务的开发时，建议按这个流程：
 我要继续开发 hanlian-workspace 项目。
 请先阅读 docs/AI-开工前必读.md。
 当前要开发的是 {service-name}。
-请你先看 docs/design 和 docs/design-detail 里的相关文档，再看代码，然后告诉我下一步应该做什么。
+请你先看 docs/design、docs/design-detail 和 docs/接口链路设计 里的相关文档，再看代码，然后告诉我下一步应该做什么。
 ```
 
 AI 收到后不要直接写代码，先完成阅读和判断。
@@ -540,37 +570,4 @@ AI 收到后不要直接写代码，先完成阅读和判断。
 AI 开工前先读文档、再看代码、再判断进度，最后给下一步。  
 不要跳过用户的学习节奏，也不要把“能跑”误判成“已经企业级完成”。
 
----
-
-## 14. 协作纠偏记录
-
-### 14.1 2026-06-26 user-service P1-1 越权修改记录
-
-这次对话里，用户说“开始这一步”后，AI 直接修改了文件。后续必须纠正：用户的长期协作规则是自己写代码，AI 默认只给代码和讲解，不能直接改文件。
-
-当时实际修改了 2 个文件：
-
-1. `dating-server/user-service/src/main/java/com/aurora/dating/user/service/impl/UserIdentityServiceImpl.java`
-   - 给 `UserIdentityServiceImpl` 注入了 `StringRedisTemplate`。
-   - 增加了封禁缓存 key，当前格式为 `{REDIS_KEY_PREFIX}:user:ban:status:{userId}`，默认前缀是 `hanlian`。
-   - 增加了 5 分钟 TTL：`Duration.ofMinutes(5)`。
-   - 修改了 `isBanned(Long userId)`：先读 Redis，未命中再查 DB，再写 Redis。
-   - 新增了 `getCachedBanStatus(Long userId)`：读取 Redis 封禁缓存。
-   - 新增了 `queryBanStatusFromDb(Long userId)`：查询 DB 判断封禁。
-   - 新增了 `cacheBanStatus(Long userId, boolean banned)`：写入 Redis 封禁缓存。
-   - 新增了 `banStatusCacheKey(Long userId)`：统一拼接 Redis key。
-
-2. `docs/design-detail/user-service-接口验收文档.md`
-   - 增加了 Redis key：`hanlian:user:ban:status:{userId}`。
-   - 更新了 `CheckBan` 代码链路。
-   - 增加了 Redis 验收项。
-   - 把“封禁 Redis 短缓存”状态改成“已完成”。
-
-后续如果继续讲这一步，AI 应该只贴需要修改 / 新增的方法，并在每个方法后面解释：
-
-- 方法做什么。
-- 参数是什么。
-- 每个参数起什么作用。
-- 返回值是什么。
-- 哪些场景会调用。
-- 为什么这样写。
+--
